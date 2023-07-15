@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type { TheLlamas, TheLlamasInterface } from "../../Tokens/TheLlamas";
 
 const _abi = [
@@ -640,12 +639,9 @@ const _abi = [
 export class TheLlamas__factory {
   static readonly abi = _abi;
   static createInterface(): TheLlamasInterface {
-    return new utils.Interface(_abi) as TheLlamasInterface;
+    return new Interface(_abi) as TheLlamasInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): TheLlamas {
-    return new Contract(address, _abi, signerOrProvider) as TheLlamas;
+  static connect(address: string, runner?: ContractRunner | null): TheLlamas {
+    return new Contract(address, _abi, runner) as unknown as TheLlamas;
   }
 }

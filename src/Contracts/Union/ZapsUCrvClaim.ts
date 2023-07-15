@@ -3,43 +3,27 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface ZapsUCrvClaimInterface extends utils.Interface {
-  functions: {
-    "claimFromDistributorAndStakeIn3PoolConvex(uint256,address,uint256,bytes32[],uint256,address)": FunctionFragment;
-    "claimFromDistributorAsCrv(uint256,address,uint256,bytes32[],uint256,address)": FunctionFragment;
-    "claimFromDistributorAsCvx(uint256,address,uint256,bytes32[],uint256,address,bool)": FunctionFragment;
-    "claimFromDistributorAsEth(uint256,address,uint256,bytes32[],uint256,address)": FunctionFragment;
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)": FunctionFragment;
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)": FunctionFragment;
-    "claimFromDistributorAsUsdt(uint256,address,uint256,bytes32[],uint256,address)": FunctionFragment;
-    "claimFromDistributorViaUniV2EthPair(uint256,address,uint256,bytes32[],uint256,address,address,address)": FunctionFragment;
-    "distributor()": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "vault()": FunctionFragment;
-    "zaps()": FunctionFragment;
-  };
-
+export interface ZapsUCrvClaimInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "claimFromDistributorAndStakeIn3PoolConvex"
       | "claimFromDistributorAsCrv"
       | "claimFromDistributorAsCvx"
@@ -58,33 +42,33 @@ export interface ZapsUCrvClaimInterface extends utils.Interface {
     functionFragment: "claimFromDistributorAndStakeIn3PoolConvex",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorAsCrv",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorAsCvx",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string,
+      AddressLike,
       boolean
     ]
   ): string;
@@ -92,51 +76,51 @@ export interface ZapsUCrvClaimInterface extends utils.Interface {
     functionFragment: "claimFromDistributorAsEth",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
       BigNumberish,
-      string
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)",
-    values: [BigNumberish, string, BigNumberish, BytesLike[], string]
+    values: [BigNumberish, AddressLike, BigNumberish, BytesLike[], AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorAsUsdt",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromDistributorViaUniV2EthPair",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
-      string,
-      string,
-      string
+      AddressLike,
+      AddressLike,
+      AddressLike
     ]
   ): string;
   encodeFunctionData(
@@ -192,504 +176,297 @@ export interface ZapsUCrvClaimInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "vault", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "zaps", data: BytesLike): Result;
-
-  events: {};
 }
 
 export interface ZapsUCrvClaim extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): ZapsUCrvClaim;
+  waitForDeployment(): Promise<this>;
 
   interface: ZapsUCrvClaimInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    claimFromDistributorAndStakeIn3PoolConvex(
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
+
+  claimFromDistributorAndStakeIn3PoolConvex: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    claimFromDistributorAsCrv(
+  claimFromDistributorAsCrv: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    claimFromDistributorAsCvx(
+  claimFromDistributorAsCvx: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    claimFromDistributorAsEth(
+  claimFromDistributorAsEth: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"(
+  "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)": TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       assetIndex: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"(
+  "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)": TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    claimFromDistributorAsUsdt(
+  claimFromDistributorAsUsdt: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    claimFromDistributorViaUniV2EthPair(
-      index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    distributor(overrides?: CallOverrides): Promise<[string]>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<[string]>;
-
-    zaps(overrides?: CallOverrides): Promise<[string]>;
-  };
-
-  claimFromDistributorAndStakeIn3PoolConvex(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromDistributorAsCrv(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromDistributorAsCvx(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    to: string,
-    lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromDistributorAsEth(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    assetIndex: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromDistributorAsUsdt(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromDistributorViaUniV2EthPair(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    minAmountOut: BigNumberish,
-    router: string,
-    outputToken: string,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  distributor(overrides?: CallOverrides): Promise<string>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  vault(overrides?: CallOverrides): Promise<string>;
-
-  zaps(overrides?: CallOverrides): Promise<string>;
-
-  callStatic: {
-    claimFromDistributorAndStakeIn3PoolConvex(
+  claimFromDistributorViaUniV2EthPair: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      router: AddressLike,
+      outputToken: AddressLike,
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    claimFromDistributorAsCrv(
+  distributor: TypedContractMethod<[], [string], "view">;
+
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
+
+  vault: TypedContractMethod<[], [string], "view">;
+
+  zaps: TypedContractMethod<[], [string], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "claimFromDistributorAndStakeIn3PoolConvex"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimFromDistributorAsCvx(
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsCrv"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimFromDistributorAsEth(
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsCvx"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"(
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsEth"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
+      amount: BigNumberish,
+      merkleProof: BytesLike[],
+      minAmountOut: BigNumberish,
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"
+  ): TypedContractMethod<
+    [
+      index: BigNumberish,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       assetIndex: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"(
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromDistributorAsUsdt(
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorAsUsdt"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromDistributorViaUniV2EthPair(
+      to: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromDistributorViaUniV2EthPair"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    distributor(overrides?: CallOverrides): Promise<string>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    vault(overrides?: CallOverrides): Promise<string>;
-
-    zaps(overrides?: CallOverrides): Promise<string>;
-  };
+      router: AddressLike,
+      outputToken: AddressLike,
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "distributor"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "vault"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "zaps"
+  ): TypedContractMethod<[], [string], "view">;
 
   filters: {};
-
-  estimateGas: {
-    claimFromDistributorAndStakeIn3PoolConvex(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromDistributorAsCrv(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromDistributorAsCvx(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromDistributorAsEth(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      assetIndex: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromDistributorAsUsdt(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromDistributorViaUniV2EthPair(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    distributor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<BigNumber>;
-
-    zaps(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    claimFromDistributorAndStakeIn3PoolConvex(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromDistributorAsCrv(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromDistributorAsCvx(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromDistributorAsEth(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],uint256,uint256,address)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      assetIndex: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "claimFromDistributorAsUnderlying(uint256,address,uint256,bytes32[],address)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromDistributorAsUsdt(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromDistributorViaUniV2EthPair(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    distributor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    zaps(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-  };
 }

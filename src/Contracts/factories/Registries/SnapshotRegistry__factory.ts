@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   SnapshotRegistry,
   SnapshotRegistryInterface,
@@ -120,12 +119,12 @@ const _abi = [
 export class SnapshotRegistry__factory {
   static readonly abi = _abi;
   static createInterface(): SnapshotRegistryInterface {
-    return new utils.Interface(_abi) as SnapshotRegistryInterface;
+    return new Interface(_abi) as SnapshotRegistryInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): SnapshotRegistry {
-    return new Contract(address, _abi, signerOrProvider) as SnapshotRegistry;
+    return new Contract(address, _abi, runner) as unknown as SnapshotRegistry;
   }
 }

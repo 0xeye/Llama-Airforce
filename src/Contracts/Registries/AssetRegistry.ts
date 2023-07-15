@@ -3,46 +3,36 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface AssetRegistryInterface extends utils.Interface {
-  functions: {
-    "assetAllocations(address,uint256)": FunctionFragment;
-    "getAllocations(address[])": FunctionFragment;
-    "recordAllocation(uint16[16])": FunctionFragment;
-  };
-
+export interface AssetRegistryInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
-      | "assetAllocations"
-      | "getAllocations"
-      | "recordAllocation"
+    nameOrSignature: "assetAllocations" | "getAllocations" | "recordAllocation"
   ): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "assetAllocations",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getAllocations",
-    values: [string[]]
+    values: [AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "recordAllocation",
@@ -61,123 +51,86 @@ export interface AssetRegistryInterface extends utils.Interface {
     functionFragment: "recordAllocation",
     data: BytesLike
   ): Result;
-
-  events: {};
 }
 
 export interface AssetRegistry extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): AssetRegistry;
+  waitForDeployment(): Promise<this>;
 
   interface: AssetRegistryInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    assetAllocations(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    getAllocations(
-      members: string[],
-      overrides?: CallOverrides
-    ): Promise<[number[][]]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    recordAllocation(
-      choices: BigNumberish[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-  };
+  assetAllocations: TypedContractMethod<
+    [arg0: AddressLike, arg1: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-  assetAllocations(
-    arg0: string,
-    arg1: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<number>;
+  getAllocations: TypedContractMethod<
+    [members: AddressLike[]],
+    [bigint[][]],
+    "view"
+  >;
 
-  getAllocations(
-    members: string[],
-    overrides?: CallOverrides
-  ): Promise<number[][]>;
+  recordAllocation: TypedContractMethod<
+    [choices: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
 
-  recordAllocation(
-    choices: BigNumberish[],
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  callStatic: {
-    assetAllocations(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
-    getAllocations(
-      members: string[],
-      overrides?: CallOverrides
-    ): Promise<number[][]>;
-
-    recordAllocation(
-      choices: BigNumberish[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  getFunction(
+    nameOrSignature: "assetAllocations"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: BigNumberish],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getAllocations"
+  ): TypedContractMethod<[members: AddressLike[]], [bigint[][]], "view">;
+  getFunction(
+    nameOrSignature: "recordAllocation"
+  ): TypedContractMethod<[choices: BigNumberish[]], [void], "nonpayable">;
 
   filters: {};
-
-  estimateGas: {
-    assetAllocations(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getAllocations(
-      members: string[],
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    recordAllocation(
-      choices: BigNumberish[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    assetAllocations(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getAllocations(
-      members: string[],
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    recordAllocation(
-      choices: BigNumberish[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-  };
 }

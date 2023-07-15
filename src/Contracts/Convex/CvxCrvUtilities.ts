@@ -3,42 +3,27 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface CvxCrvUtilitiesInterface extends utils.Interface {
-  functions: {
-    "accountExtraRewardRates(address)": FunctionFragment;
-    "accountRewardRates(address)": FunctionFragment;
-    "apr(uint256,uint256,uint256)": FunctionFragment;
-    "convexProxy()": FunctionFragment;
-    "crv()": FunctionFragment;
-    "cvx()": FunctionFragment;
-    "cvxCrvStaking()": FunctionFragment;
-    "cvxMining()": FunctionFragment;
-    "externalRewardContracts()": FunctionFragment;
-    "extraRewardRates()": FunctionFragment;
-    "mainRewardRates()": FunctionFragment;
-    "singleRewardRate(address)": FunctionFragment;
-    "stkcvxcrv()": FunctionFragment;
-  };
-
+export interface CvxCrvUtilitiesInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "accountExtraRewardRates"
       | "accountRewardRates"
       | "apr"
@@ -56,11 +41,11 @@ export interface CvxCrvUtilitiesInterface extends utils.Interface {
 
   encodeFunctionData(
     functionFragment: "accountExtraRewardRates",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "accountRewardRates",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "apr",
@@ -91,7 +76,7 @@ export interface CvxCrvUtilitiesInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "singleRewardRate",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "stkcvxcrv", values?: undefined): string;
 
@@ -132,331 +117,224 @@ export interface CvxCrvUtilitiesInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "stkcvxcrv", data: BytesLike): Result;
-
-  events: {};
 }
 
 export interface CvxCrvUtilities extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): CvxCrvUtilities;
+  waitForDeployment(): Promise<this>;
 
   interface: CvxCrvUtilitiesInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    accountExtraRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
+
+  accountExtraRewardRates: TypedContractMethod<
+    [_account: AddressLike],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
+    ],
+    "view"
+  >;
 
-    accountRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+  accountRewardRates: TypedContractMethod<
+    [_account: AddressLike],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
+    ],
+    "view"
+  >;
 
-    apr(
+  apr: TypedContractMethod<
+    [
       _rate: BigNumberish,
       _priceOfReward: BigNumberish,
-      _priceOfDeposit: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { _apr: BigNumber }>;
-
-    convexProxy(overrides?: CallOverrides): Promise<[string]>;
-
-    crv(overrides?: CallOverrides): Promise<[string]>;
-
-    cvx(overrides?: CallOverrides): Promise<[string]>;
-
-    cvxCrvStaking(overrides?: CallOverrides): Promise<[string]>;
-
-    cvxMining(overrides?: CallOverrides): Promise<[string]>;
-
-    externalRewardContracts(
-      overrides?: CallOverrides
-    ): Promise<[string[]] & { rewardContracts: string[] }>;
-
-    extraRewardRates(
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
-        tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
-      }
-    >;
-
-    mainRewardRates(
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
-        tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
-      }
-    >;
-
-    singleRewardRate(
-      _rewardContract: string,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber] & { token: string; rate: BigNumber }>;
-
-    stkcvxcrv(overrides?: CallOverrides): Promise<[string]>;
-  };
-
-  accountExtraRewardRates(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [string[], BigNumber[], BigNumber[]] & {
-      tokens: string[];
-      rates: BigNumber[];
-      groups: BigNumber[];
-    }
+      _priceOfDeposit: BigNumberish
+    ],
+    [bigint],
+    "view"
   >;
 
-  accountRewardRates(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [string[], BigNumber[], BigNumber[]] & {
-      tokens: string[];
-      rates: BigNumber[];
-      groups: BigNumber[];
-    }
-  >;
+  convexProxy: TypedContractMethod<[], [string], "view">;
 
-  apr(
-    _rate: BigNumberish,
-    _priceOfReward: BigNumberish,
-    _priceOfDeposit: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  crv: TypedContractMethod<[], [string], "view">;
 
-  convexProxy(overrides?: CallOverrides): Promise<string>;
+  cvx: TypedContractMethod<[], [string], "view">;
 
-  crv(overrides?: CallOverrides): Promise<string>;
+  cvxCrvStaking: TypedContractMethod<[], [string], "view">;
 
-  cvx(overrides?: CallOverrides): Promise<string>;
+  cvxMining: TypedContractMethod<[], [string], "view">;
 
-  cvxCrvStaking(overrides?: CallOverrides): Promise<string>;
+  externalRewardContracts: TypedContractMethod<[], [string[]], "view">;
 
-  cvxMining(overrides?: CallOverrides): Promise<string>;
-
-  externalRewardContracts(overrides?: CallOverrides): Promise<string[]>;
-
-  extraRewardRates(
-    overrides?: CallOverrides
-  ): Promise<
-    [string[], BigNumber[], BigNumber[]] & {
-      tokens: string[];
-      rates: BigNumber[];
-      groups: BigNumber[];
-    }
-  >;
-
-  mainRewardRates(
-    overrides?: CallOverrides
-  ): Promise<
-    [string[], BigNumber[], BigNumber[]] & {
-      tokens: string[];
-      rates: BigNumber[];
-      groups: BigNumber[];
-    }
-  >;
-
-  singleRewardRate(
-    _rewardContract: string,
-    overrides?: CallOverrides
-  ): Promise<[string, BigNumber] & { token: string; rate: BigNumber }>;
-
-  stkcvxcrv(overrides?: CallOverrides): Promise<string>;
-
-  callStatic: {
-    accountExtraRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+  extraRewardRates: TypedContractMethod<
+    [],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
+    ],
+    "view"
+  >;
 
-    accountRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+  mainRewardRates: TypedContractMethod<
+    [],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
+    ],
+    "view"
+  >;
 
-    apr(
+  singleRewardRate: TypedContractMethod<
+    [_rewardContract: AddressLike],
+    [[string, bigint] & { token: string; rate: bigint }],
+    "view"
+  >;
+
+  stkcvxcrv: TypedContractMethod<[], [string], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "accountExtraRewardRates"
+  ): TypedContractMethod<
+    [_account: AddressLike],
+    [
+      [string[], bigint[], bigint[]] & {
+        tokens: string[];
+        rates: bigint[];
+        groups: bigint[];
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "accountRewardRates"
+  ): TypedContractMethod<
+    [_account: AddressLike],
+    [
+      [string[], bigint[], bigint[]] & {
+        tokens: string[];
+        rates: bigint[];
+        groups: bigint[];
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "apr"
+  ): TypedContractMethod<
+    [
       _rate: BigNumberish,
       _priceOfReward: BigNumberish,
-      _priceOfDeposit: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    convexProxy(overrides?: CallOverrides): Promise<string>;
-
-    crv(overrides?: CallOverrides): Promise<string>;
-
-    cvx(overrides?: CallOverrides): Promise<string>;
-
-    cvxCrvStaking(overrides?: CallOverrides): Promise<string>;
-
-    cvxMining(overrides?: CallOverrides): Promise<string>;
-
-    externalRewardContracts(overrides?: CallOverrides): Promise<string[]>;
-
-    extraRewardRates(
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+      _priceOfDeposit: BigNumberish
+    ],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "convexProxy"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "crv"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "cvx"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "cvxCrvStaking"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "cvxMining"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "externalRewardContracts"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "extraRewardRates"
+  ): TypedContractMethod<
+    [],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
-
-    mainRewardRates(
-      overrides?: CallOverrides
-    ): Promise<
-      [string[], BigNumber[], BigNumber[]] & {
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "mainRewardRates"
+  ): TypedContractMethod<
+    [],
+    [
+      [string[], bigint[], bigint[]] & {
         tokens: string[];
-        rates: BigNumber[];
-        groups: BigNumber[];
+        rates: bigint[];
+        groups: bigint[];
       }
-    >;
-
-    singleRewardRate(
-      _rewardContract: string,
-      overrides?: CallOverrides
-    ): Promise<[string, BigNumber] & { token: string; rate: BigNumber }>;
-
-    stkcvxcrv(overrides?: CallOverrides): Promise<string>;
-  };
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "singleRewardRate"
+  ): TypedContractMethod<
+    [_rewardContract: AddressLike],
+    [[string, bigint] & { token: string; rate: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "stkcvxcrv"
+  ): TypedContractMethod<[], [string], "view">;
 
   filters: {};
-
-  estimateGas: {
-    accountExtraRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    accountRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    apr(
-      _rate: BigNumberish,
-      _priceOfReward: BigNumberish,
-      _priceOfDeposit: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    convexProxy(overrides?: CallOverrides): Promise<BigNumber>;
-
-    crv(overrides?: CallOverrides): Promise<BigNumber>;
-
-    cvx(overrides?: CallOverrides): Promise<BigNumber>;
-
-    cvxCrvStaking(overrides?: CallOverrides): Promise<BigNumber>;
-
-    cvxMining(overrides?: CallOverrides): Promise<BigNumber>;
-
-    externalRewardContracts(overrides?: CallOverrides): Promise<BigNumber>;
-
-    extraRewardRates(overrides?: CallOverrides): Promise<BigNumber>;
-
-    mainRewardRates(overrides?: CallOverrides): Promise<BigNumber>;
-
-    singleRewardRate(
-      _rewardContract: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    stkcvxcrv(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    accountExtraRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    accountRewardRates(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    apr(
-      _rate: BigNumberish,
-      _priceOfReward: BigNumberish,
-      _priceOfDeposit: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    convexProxy(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    crv(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    cvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    cvxCrvStaking(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    cvxMining(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    externalRewardContracts(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    extraRewardRates(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    mainRewardRates(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    singleRewardRate(
-      _rewardContract: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    stkcvxcrv(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-  };
 }

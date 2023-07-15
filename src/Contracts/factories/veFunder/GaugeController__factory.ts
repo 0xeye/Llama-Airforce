@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   GaugeController,
   GaugeControllerInterface,
@@ -35,12 +34,12 @@ const _abi = [
 export class GaugeController__factory {
   static readonly abi = _abi;
   static createInterface(): GaugeControllerInterface {
-    return new utils.Interface(_abi) as GaugeControllerInterface;
+    return new Interface(_abi) as GaugeControllerInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): GaugeController {
-    return new Contract(address, _abi, signerOrProvider) as GaugeController;
+    return new Contract(address, _abi, runner) as unknown as GaugeController;
   }
 }

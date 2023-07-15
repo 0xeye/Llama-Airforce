@@ -3,74 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PayableOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface ZapsUFxsInterface extends utils.Interface {
-  functions: {
-    "CRVETH_CRV_INDEX()": FunctionFragment;
-    "CRVETH_ETH_INDEX()": FunctionFragment;
-    "CRV_TOKEN()": FunctionFragment;
-    "CURVE_CRV_ETH_POOL()": FunctionFragment;
-    "CURVE_CVXFXS_FXS_LP_TOKEN()": FunctionFragment;
-    "CURVE_CVXFXS_FXS_POOL()": FunctionFragment;
-    "CURVE_CVX_ETH_POOL()": FunctionFragment;
-    "CURVE_FRAX_USDC_POOL()": FunctionFragment;
-    "CURVE_FXS_ETH_POOL()": FunctionFragment;
-    "CVXETH_CVX_INDEX()": FunctionFragment;
-    "CVXETH_ETH_INDEX()": FunctionFragment;
-    "CVXFXS_TOKEN()": FunctionFragment;
-    "CVX_TOKEN()": FunctionFragment;
-    "FRAX_TOKEN()": FunctionFragment;
-    "FXS_DEPOSIT()": FunctionFragment;
-    "FXS_TOKEN()": FunctionFragment;
-    "UNISWAP_ROUTER()": FunctionFragment;
-    "UNIV3_ROUTER()": FunctionFragment;
-    "USDC_TOKEN()": FunctionFragment;
-    "USDT_TOKEN()": FunctionFragment;
-    "WETH_TOKEN()": FunctionFragment;
-    "_claimAsEth(uint256)": FunctionFragment;
-    "claimFromVaultAsCvx(uint256,uint256,address,bool)": FunctionFragment;
-    "claimFromVaultAsEth(uint256,uint256,address)": FunctionFragment;
-    "claimFromVaultAsFxs(uint256,uint256,address)": FunctionFragment;
-    "claimFromVaultAsUsdt(uint256,uint256,address)": FunctionFragment;
-    "claimFromVaultViaUniV2EthPair(uint256,uint256,address,address,address)": FunctionFragment;
-    "depositFromEth(uint256,address,bool)": FunctionFragment;
-    "depositFromFxs(uint256,uint256,address,bool)": FunctionFragment;
-    "depositFromUFxs(uint256,uint256,address)": FunctionFragment;
-    "depositViaUniV2EthPair(uint256,uint256,address,address,address,bool)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "setSwapOption(uint8)": FunctionFragment;
-    "swapOption()": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "vault()": FunctionFragment;
-  };
-
+export interface ZapsUFxsInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "CRVETH_CRV_INDEX"
       | "CRVETH_ETH_INDEX"
       | "CRV_TOKEN"
@@ -110,6 +65,10 @@ export interface ZapsUFxsInterface extends utils.Interface {
       | "transferOwnership"
       | "vault"
   ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic: "OptionChanged" | "OwnershipTransferred"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "CRVETH_CRV_INDEX",
@@ -192,39 +151,46 @@ export interface ZapsUFxsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultAsCvx",
-    values: [BigNumberish, BigNumberish, string, boolean]
+    values: [BigNumberish, BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultAsEth",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultAsFxs",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultAsUsdt",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultViaUniV2EthPair",
-    values: [BigNumberish, BigNumberish, string, string, string]
+    values: [BigNumberish, BigNumberish, AddressLike, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "depositFromEth",
-    values: [BigNumberish, string, boolean]
+    values: [BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "depositFromFxs",
-    values: [BigNumberish, BigNumberish, string, boolean]
+    values: [BigNumberish, BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "depositFromUFxs",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "depositViaUniV2EthPair",
-    values: [BigNumberish, BigNumberish, string, string, string, boolean]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      AddressLike,
+      AddressLike,
+      AddressLike,
+      boolean
+    ]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -245,7 +211,7 @@ export interface ZapsUFxsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "vault", values?: undefined): string;
 
@@ -371,798 +337,438 @@ export interface ZapsUFxsInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "vault", data: BytesLike): Result;
-
-  events: {
-    "OptionChanged(uint8,uint8)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "OptionChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
 }
 
-export interface OptionChangedEventObject {
-  oldOption: number;
-  newOption: number;
+export namespace OptionChangedEvent {
+  export type InputTuple = [oldOption: BigNumberish, newOption: BigNumberish];
+  export type OutputTuple = [oldOption: bigint, newOption: bigint];
+  export interface OutputObject {
+    oldOption: bigint;
+    newOption: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OptionChangedEvent = TypedEvent<
-  [number, number],
-  OptionChangedEventObject
->;
 
-export type OptionChangedEventFilter = TypedEventFilter<OptionChangedEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
-
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
 
 export interface ZapsUFxs extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): ZapsUFxs;
+  waitForDeployment(): Promise<this>;
 
   interface: ZapsUFxsInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    CRV_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_CRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CVXFXS_FXS_LP_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CRV_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CURVE_CVXFXS_FXS_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CRV_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CVXFXS_FXS_LP_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CURVE_FRAX_USDC_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CVXFXS_FXS_POOL: TypedContractMethod<[], [string], "view">;
 
-    CURVE_FXS_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CVX_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_FRAX_USDC_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_FXS_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXFXS_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXETH_CVX_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CVX_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    FRAX_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXFXS_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    FXS_DEPOSIT(overrides?: CallOverrides): Promise<[string]>;
+  CVX_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    FXS_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  FRAX_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    UNISWAP_ROUTER(overrides?: CallOverrides): Promise<[string]>;
+  FXS_DEPOSIT: TypedContractMethod<[], [string], "view">;
 
-    UNIV3_ROUTER(overrides?: CallOverrides): Promise<[string]>;
+  FXS_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    USDC_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  UNISWAP_ROUTER: TypedContractMethod<[], [string], "view">;
 
-    USDT_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  UNIV3_ROUTER: TypedContractMethod<[], [string], "view">;
 
-    WETH_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  USDC_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    _claimAsEth(
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  USDT_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    claimFromVaultAsCvx(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  WETH_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    claimFromVaultAsEth(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  _claimAsEth: TypedContractMethod<
+    [amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-    claimFromVaultAsFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    claimFromVaultAsUsdt(
+  claimFromVaultAsCvx: TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike,
+      lock: boolean
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    claimFromVaultViaUniV2EthPair(
+  claimFromVaultAsEth: TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  claimFromVaultAsFxs: TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  claimFromVaultAsUsdt: TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  claimFromVaultViaUniV2EthPair: TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      router: AddressLike,
+      outputToken: AddressLike,
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    depositFromEth(
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  depositFromEth: TypedContractMethod<
+    [minAmountOut: BigNumberish, to: AddressLike, lock: boolean],
+    [void],
+    "payable"
+  >;
 
-    depositFromFxs(
+  depositFromFxs: TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    depositFromUFxs(
+  depositFromUFxs: TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  depositViaUniV2EthPair: TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      router: AddressLike,
+      inputToken: AddressLike,
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    depositViaUniV2EthPair(
+  owner: TypedContractMethod<[], [string], "view">;
+
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
+
+  setSwapOption: TypedContractMethod<
+    [_newOption: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  swapOption: TypedContractMethod<[], [bigint], "view">;
+
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  vault: TypedContractMethod<[], [string], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "CRVETH_CRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRVETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRV_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CRV_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVXFXS_FXS_LP_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVXFXS_FXS_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVX_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_FRAX_USDC_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_FXS_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_CVX_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXFXS_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVX_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "FRAX_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "FXS_DEPOSIT"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "FXS_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "UNISWAP_ROUTER"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "UNIV3_ROUTER"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "USDC_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "USDT_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "WETH_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "_claimAsEth"
+  ): TypedContractMethod<[amount: BigNumberish], [bigint], "nonpayable">;
+  getFunction(
+    nameOrSignature: "claimFromVaultAsCvx"
+  ): TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      router: string,
-      inputToken: string,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setSwapOption(
-      _newOption: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    swapOption(overrides?: CallOverrides): Promise<[number]>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<[string]>;
-  };
-
-  CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CVXFXS_FXS_LP_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CVXFXS_FXS_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_FRAX_USDC_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_FXS_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXFXS_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  FRAX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  FXS_DEPOSIT(overrides?: CallOverrides): Promise<string>;
-
-  FXS_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  UNISWAP_ROUTER(overrides?: CallOverrides): Promise<string>;
-
-  UNIV3_ROUTER(overrides?: CallOverrides): Promise<string>;
-
-  USDC_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  USDT_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  WETH_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  _claimAsEth(
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultAsCvx(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultAsEth(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultAsFxs(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultAsUsdt(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultViaUniV2EthPair(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    router: string,
-    outputToken: string,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositFromEth(
-    minAmountOut: BigNumberish,
-    to: string,
-    lock: boolean,
-    overrides?: PayableOverrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositFromFxs(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositFromUFxs(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositViaUniV2EthPair(
-    amount: BigNumberish,
-    minAmountOut: BigNumberish,
-    router: string,
-    inputToken: string,
-    to: string,
-    lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setSwapOption(
-    _newOption: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  swapOption(overrides?: CallOverrides): Promise<number>;
-
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  vault(overrides?: CallOverrides): Promise<string>;
-
-  callStatic: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVXFXS_FXS_LP_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVXFXS_FXS_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_FRAX_USDC_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_FXS_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXFXS_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    FRAX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    FXS_DEPOSIT(overrides?: CallOverrides): Promise<string>;
-
-    FXS_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    UNISWAP_ROUTER(overrides?: CallOverrides): Promise<string>;
-
-    UNIV3_ROUTER(overrides?: CallOverrides): Promise<string>;
-
-    USDC_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    USDT_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    _claimAsEth(
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsCvx(
+      to: AddressLike,
+      lock: boolean
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromVaultAsEth"
+  ): TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromVaultAsFxs"
+  ): TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromVaultAsUsdt"
+  ): TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromVaultViaUniV2EthPair"
+  ): TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsEth(
+      router: AddressLike,
+      outputToken: AddressLike,
+      to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositFromEth"
+  ): TypedContractMethod<
+    [minAmountOut: BigNumberish, to: AddressLike, lock: boolean],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "depositFromFxs"
+  ): TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsFxs(
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositFromUFxs"
+  ): TypedContractMethod<
+    [amount: BigNumberish, minAmountOut: BigNumberish, to: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositViaUniV2EthPair"
+  ): TypedContractMethod<
+    [
       amount: BigNumberish,
       minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+      router: AddressLike,
+      inputToken: AddressLike,
+      to: AddressLike,
+      lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setSwapOption"
+  ): TypedContractMethod<[_newOption: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "swapOption"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "vault"
+  ): TypedContractMethod<[], [string], "view">;
 
-    claimFromVaultAsUsdt(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    claimFromVaultViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositFromEth(
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositFromFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositFromUFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      inputToken: string,
-      to: string,
-      lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    setSwapOption(
-      _newOption: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    swapOption(overrides?: CallOverrides): Promise<number>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    vault(overrides?: CallOverrides): Promise<string>;
-  };
+  getEvent(
+    key: "OptionChanged"
+  ): TypedContractEvent<
+    OptionChangedEvent.InputTuple,
+    OptionChangedEvent.OutputTuple,
+    OptionChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
 
   filters: {
-    "OptionChanged(uint8,uint8)"(
-      oldOption?: null,
-      newOption?: null
-    ): OptionChangedEventFilter;
-    OptionChanged(oldOption?: null, newOption?: null): OptionChangedEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-  };
-
-  estimateGas: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVXFXS_FXS_LP_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVXFXS_FXS_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_FRAX_USDC_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_FXS_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXFXS_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FRAX_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FXS_DEPOSIT(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FXS_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    UNISWAP_ROUTER(overrides?: CallOverrides): Promise<BigNumber>;
-
-    UNIV3_ROUTER(overrides?: CallOverrides): Promise<BigNumber>;
-
-    USDC_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    USDT_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    _claimAsEth(
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsCvx(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsEth(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultAsUsdt(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositFromEth(
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositFromFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositFromUFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      inputToken: string,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    setSwapOption(
-      _newOption: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    swapOption(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CURVE_CRV_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVXFXS_FXS_LP_TOKEN(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVXFXS_FXS_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVX_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_FRAX_USDC_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_FXS_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXFXS_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FRAX_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FXS_DEPOSIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FXS_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    UNISWAP_ROUTER(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    UNIV3_ROUTER(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    USDC_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    USDT_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    _claimAsEth(
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultAsCvx(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultAsEth(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultAsFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultAsUsdt(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      outputToken: string,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositFromEth(
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositFromFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositFromUFxs(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositViaUniV2EthPair(
-      amount: BigNumberish,
-      minAmountOut: BigNumberish,
-      router: string,
-      inputToken: string,
-      to: string,
-      lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setSwapOption(
-      _newOption: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    swapOption(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "OptionChanged(uint8,uint8)": TypedContractEvent<
+      OptionChangedEvent.InputTuple,
+      OptionChangedEvent.OutputTuple,
+      OptionChangedEvent.OutputObject
+    >;
+    OptionChanged: TypedContractEvent<
+      OptionChangedEvent.InputTuple,
+      OptionChangedEvent.OutputTuple,
+      OptionChangedEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
   };
 }

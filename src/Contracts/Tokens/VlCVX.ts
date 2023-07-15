@@ -3,35 +3,32 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
 export declare namespace CvxLocker {
-  export type EarnedDataStruct = { token: string; amount: BigNumberish };
+  export type EarnedDataStruct = { token: AddressLike; amount: BigNumberish };
 
-  export type EarnedDataStructOutput = [string, BigNumber] & {
+  export type EarnedDataStructOutput = [token: string, amount: bigint] & {
     token: string;
-    amount: BigNumber;
+    amount: bigint;
   };
 
   export type LockedBalanceStruct = {
@@ -40,83 +37,16 @@ export declare namespace CvxLocker {
     unlockTime: BigNumberish;
   };
 
-  export type LockedBalanceStructOutput = [BigNumber, BigNumber, number] & {
-    amount: BigNumber;
-    boosted: BigNumber;
-    unlockTime: number;
-  };
+  export type LockedBalanceStructOutput = [
+    amount: bigint,
+    boosted: bigint,
+    unlockTime: bigint
+  ] & { amount: bigint; boosted: bigint; unlockTime: bigint };
 }
 
-export interface VlCVXInterface extends utils.Interface {
-  functions: {
-    "addReward(address,address,bool)": FunctionFragment;
-    "approveRewardDistributor(address,address,bool)": FunctionFragment;
-    "balanceAtEpochOf(uint256,address)": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "balances(address)": FunctionFragment;
-    "boostPayment()": FunctionFragment;
-    "boostRate()": FunctionFragment;
-    "boostedSupply()": FunctionFragment;
-    "checkpointEpoch()": FunctionFragment;
-    "claimableRewards(address)": FunctionFragment;
-    "cvxCrv()": FunctionFragment;
-    "cvxcrvStaking()": FunctionFragment;
-    "decimals()": FunctionFragment;
-    "denominator()": FunctionFragment;
-    "epochCount()": FunctionFragment;
-    "epochs(uint256)": FunctionFragment;
-    "findEpochId(uint256)": FunctionFragment;
-    "getReward(address,bool)": FunctionFragment;
-    "getReward(address)": FunctionFragment;
-    "getRewardForDuration(address)": FunctionFragment;
-    "isShutdown()": FunctionFragment;
-    "kickExpiredLocks(address)": FunctionFragment;
-    "kickRewardEpochDelay()": FunctionFragment;
-    "kickRewardPerEpoch()": FunctionFragment;
-    "lastTimeRewardApplicable(address)": FunctionFragment;
-    "lock(address,uint256,uint256)": FunctionFragment;
-    "lockDuration()": FunctionFragment;
-    "lockedBalanceOf(address)": FunctionFragment;
-    "lockedBalances(address)": FunctionFragment;
-    "lockedSupply()": FunctionFragment;
-    "maximumBoostPayment()": FunctionFragment;
-    "maximumStake()": FunctionFragment;
-    "minimumStake()": FunctionFragment;
-    "name()": FunctionFragment;
-    "nextBoostRate()": FunctionFragment;
-    "nextMaximumBoostPayment()": FunctionFragment;
-    "notifyRewardAmount(address,uint256)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "processExpiredLocks(bool)": FunctionFragment;
-    "processExpiredLocks(bool,uint256,address)": FunctionFragment;
-    "recoverERC20(address,uint256)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "rewardData(address)": FunctionFragment;
-    "rewardDistributors(address,address)": FunctionFragment;
-    "rewardPerToken(address)": FunctionFragment;
-    "rewardTokens(uint256)": FunctionFragment;
-    "rewardWeightOf(address)": FunctionFragment;
-    "rewards(address,address)": FunctionFragment;
-    "rewardsDuration()": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "setBoost(uint256,uint256,address)": FunctionFragment;
-    "setKickIncentive(uint256,uint256)": FunctionFragment;
-    "setStakeLimits(uint256,uint256)": FunctionFragment;
-    "setStakingContract(address)": FunctionFragment;
-    "shutdown()": FunctionFragment;
-    "stakeOffsetOnLock()": FunctionFragment;
-    "stakingProxy()": FunctionFragment;
-    "stakingToken()": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "totalSupplyAtEpoch(uint256)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "userLocks(address,uint256)": FunctionFragment;
-    "userRewardPerTokenPaid(address,address)": FunctionFragment;
-  };
-
+export interface VlCVXInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "addReward"
       | "approveRewardDistributor"
       | "balanceAtEpochOf"
@@ -183,20 +113,37 @@ export interface VlCVXInterface extends utils.Interface {
       | "userRewardPerTokenPaid"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "KickReward"
+      | "OwnershipTransferred"
+      | "Recovered"
+      | "RewardAdded"
+      | "RewardPaid"
+      | "Staked"
+      | "Withdrawn"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "addReward",
-    values: [string, string, boolean]
+    values: [AddressLike, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "approveRewardDistributor",
-    values: [string, string, boolean]
+    values: [AddressLike, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "balanceAtEpochOf",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
-  encodeFunctionData(functionFragment: "balances", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "balances",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "boostPayment",
     values?: undefined
@@ -212,7 +159,7 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "claimableRewards",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "cvxCrv", values?: undefined): string;
   encodeFunctionData(
@@ -238,15 +185,15 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getReward(address,bool)",
-    values: [string, boolean]
+    values: [AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "getReward(address)",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getRewardForDuration",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "isShutdown",
@@ -254,7 +201,7 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "kickExpiredLocks",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "kickRewardEpochDelay",
@@ -266,11 +213,11 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "lastTimeRewardApplicable",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "lock",
-    values: [string, BigNumberish, BigNumberish]
+    values: [AddressLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "lockDuration",
@@ -278,11 +225,11 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "lockedBalanceOf",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "lockedBalances",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "lockedSupply",
@@ -311,7 +258,7 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "notifyRewardAmount",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -320,24 +267,27 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "processExpiredLocks(bool,uint256,address)",
-    values: [boolean, BigNumberish, string]
+    values: [boolean, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "recoverERC20",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "rewardData", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "rewardData",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "rewardDistributors",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardPerToken",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardTokens",
@@ -345,11 +295,11 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "rewardWeightOf",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewards",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardsDuration",
@@ -361,7 +311,7 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setBoost",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setKickIncentive",
@@ -373,7 +323,7 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setStakingContract",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "shutdown", values?: undefined): string;
   encodeFunctionData(
@@ -399,15 +349,15 @@ export interface VlCVXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "userLocks",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "userRewardPerTokenPaid",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
 
   decodeFunctionResult(functionFragment: "addReward", data: BytesLike): Result;
@@ -612,1565 +562,878 @@ export interface VlCVXInterface extends utils.Interface {
     functionFragment: "userRewardPerTokenPaid",
     data: BytesLike
   ): Result;
-
-  events: {
-    "KickReward(address,address,uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "Recovered(address,uint256)": EventFragment;
-    "RewardAdded(address,uint256)": EventFragment;
-    "RewardPaid(address,address,uint256)": EventFragment;
-    "Staked(address,uint256,uint256,uint256)": EventFragment;
-    "Withdrawn(address,uint256,bool)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "KickReward"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Recovered"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardAdded"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardPaid"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Staked"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
 
-export interface KickRewardEventObject {
-  _user: string;
-  _kicked: string;
-  _reward: BigNumber;
+export namespace KickRewardEvent {
+  export type InputTuple = [
+    _user: AddressLike,
+    _kicked: AddressLike,
+    _reward: BigNumberish
+  ];
+  export type OutputTuple = [_user: string, _kicked: string, _reward: bigint];
+  export interface OutputObject {
+    _user: string;
+    _kicked: string;
+    _reward: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type KickRewardEvent = TypedEvent<
-  [string, string, BigNumber],
-  KickRewardEventObject
->;
 
-export type KickRewardEventFilter = TypedEventFilter<KickRewardEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface RecoveredEventObject {
-  _token: string;
-  _amount: BigNumber;
+export namespace RecoveredEvent {
+  export type InputTuple = [_token: AddressLike, _amount: BigNumberish];
+  export type OutputTuple = [_token: string, _amount: bigint];
+  export interface OutputObject {
+    _token: string;
+    _amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RecoveredEvent = TypedEvent<
-  [string, BigNumber],
-  RecoveredEventObject
->;
 
-export type RecoveredEventFilter = TypedEventFilter<RecoveredEvent>;
-
-export interface RewardAddedEventObject {
-  _token: string;
-  _reward: BigNumber;
+export namespace RewardAddedEvent {
+  export type InputTuple = [_token: AddressLike, _reward: BigNumberish];
+  export type OutputTuple = [_token: string, _reward: bigint];
+  export interface OutputObject {
+    _token: string;
+    _reward: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardAddedEvent = TypedEvent<
-  [string, BigNumber],
-  RewardAddedEventObject
->;
 
-export type RewardAddedEventFilter = TypedEventFilter<RewardAddedEvent>;
-
-export interface RewardPaidEventObject {
-  _user: string;
-  _rewardsToken: string;
-  _reward: BigNumber;
+export namespace RewardPaidEvent {
+  export type InputTuple = [
+    _user: AddressLike,
+    _rewardsToken: AddressLike,
+    _reward: BigNumberish
+  ];
+  export type OutputTuple = [
+    _user: string,
+    _rewardsToken: string,
+    _reward: bigint
+  ];
+  export interface OutputObject {
+    _user: string;
+    _rewardsToken: string;
+    _reward: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardPaidEvent = TypedEvent<
-  [string, string, BigNumber],
-  RewardPaidEventObject
->;
 
-export type RewardPaidEventFilter = TypedEventFilter<RewardPaidEvent>;
-
-export interface StakedEventObject {
-  _user: string;
-  _paidAmount: BigNumber;
-  _lockedAmount: BigNumber;
-  _boostedAmount: BigNumber;
+export namespace StakedEvent {
+  export type InputTuple = [
+    _user: AddressLike,
+    _paidAmount: BigNumberish,
+    _lockedAmount: BigNumberish,
+    _boostedAmount: BigNumberish
+  ];
+  export type OutputTuple = [
+    _user: string,
+    _paidAmount: bigint,
+    _lockedAmount: bigint,
+    _boostedAmount: bigint
+  ];
+  export interface OutputObject {
+    _user: string;
+    _paidAmount: bigint;
+    _lockedAmount: bigint;
+    _boostedAmount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type StakedEvent = TypedEvent<
-  [string, BigNumber, BigNumber, BigNumber],
-  StakedEventObject
->;
 
-export type StakedEventFilter = TypedEventFilter<StakedEvent>;
-
-export interface WithdrawnEventObject {
-  _user: string;
-  _amount: BigNumber;
-  _relocked: boolean;
+export namespace WithdrawnEvent {
+  export type InputTuple = [
+    _user: AddressLike,
+    _amount: BigNumberish,
+    _relocked: boolean
+  ];
+  export type OutputTuple = [
+    _user: string,
+    _amount: bigint,
+    _relocked: boolean
+  ];
+  export interface OutputObject {
+    _user: string;
+    _amount: bigint;
+    _relocked: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawnEvent = TypedEvent<
-  [string, BigNumber, boolean],
-  WithdrawnEventObject
->;
-
-export type WithdrawnEventFilter = TypedEventFilter<WithdrawnEvent>;
 
 export interface VlCVX extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): VlCVX;
+  waitForDeployment(): Promise<this>;
 
   interface: VlCVXInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      _useBoost: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    balanceAtEpochOf(
-      _epoch: BigNumberish,
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { amount: BigNumber }>;
+  addReward: TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _useBoost: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    balanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { amount: BigNumber }>;
+  approveRewardDistributor: TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _approved: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    balances(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, number] & {
-        locked: BigNumber;
-        boosted: BigNumber;
-        nextUnlockIndex: number;
+  balanceAtEpochOf: TypedContractMethod<
+    [_epoch: BigNumberish, _user: AddressLike],
+    [bigint],
+    "view"
+  >;
+
+  balanceOf: TypedContractMethod<[_user: AddressLike], [bigint], "view">;
+
+  balances: TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, bigint, bigint] & {
+        locked: bigint;
+        boosted: bigint;
+        nextUnlockIndex: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
 
-    boostPayment(overrides?: CallOverrides): Promise<[string]>;
+  boostPayment: TypedContractMethod<[], [string], "view">;
 
-    boostRate(overrides?: CallOverrides): Promise<[BigNumber]>;
+  boostRate: TypedContractMethod<[], [bigint], "view">;
 
-    boostedSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
+  boostedSupply: TypedContractMethod<[], [bigint], "view">;
 
-    checkpointEpoch(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  checkpointEpoch: TypedContractMethod<[], [void], "nonpayable">;
 
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [CvxLocker.EarnedDataStructOutput[]] & {
-        userRewards: CvxLocker.EarnedDataStructOutput[];
-      }
-    >;
+  claimableRewards: TypedContractMethod<
+    [_account: AddressLike],
+    [CvxLocker.EarnedDataStructOutput[]],
+    "view"
+  >;
 
-    cvxCrv(overrides?: CallOverrides): Promise<[string]>;
+  cvxCrv: TypedContractMethod<[], [string], "view">;
 
-    cvxcrvStaking(overrides?: CallOverrides): Promise<[string]>;
+  cvxcrvStaking: TypedContractMethod<[], [string], "view">;
 
-    decimals(overrides?: CallOverrides): Promise<[number]>;
+  decimals: TypedContractMethod<[], [bigint], "view">;
 
-    denominator(overrides?: CallOverrides): Promise<[BigNumber]>;
+  denominator: TypedContractMethod<[], [bigint], "view">;
 
-    epochCount(overrides?: CallOverrides): Promise<[BigNumber]>;
+  epochCount: TypedContractMethod<[], [bigint], "view">;
 
-    epochs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, number] & { supply: BigNumber; date: number }>;
+  epochs: TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, bigint] & { supply: bigint; date: bigint }],
+    "view"
+  >;
 
-    findEpochId(
-      _time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { epoch: BigNumber }>;
+  findEpochId: TypedContractMethod<[_time: BigNumberish], [bigint], "view">;
 
-    "getReward(address,bool)"(
-      _account: string,
-      _stake: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "getReward(address,bool)": TypedContractMethod<
+    [_account: AddressLike, _stake: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    "getReward(address)"(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "getReward(address)": TypedContractMethod<
+    [_account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  getRewardForDuration: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    isShutdown(overrides?: CallOverrides): Promise<[boolean]>;
+  isShutdown: TypedContractMethod<[], [boolean], "view">;
 
-    kickExpiredLocks(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  kickExpiredLocks: TypedContractMethod<
+    [_account: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    kickRewardEpochDelay(overrides?: CallOverrides): Promise<[BigNumber]>;
+  kickRewardEpochDelay: TypedContractMethod<[], [bigint], "view">;
 
-    kickRewardPerEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
+  kickRewardPerEpoch: TypedContractMethod<[], [bigint], "view">;
 
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  lastTimeRewardApplicable: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    lock(
-      _account: string,
-      _amount: BigNumberish,
-      _spendRatio: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  lock: TypedContractMethod<
+    [_account: AddressLike, _amount: BigNumberish, _spendRatio: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    lockDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
+  lockDuration: TypedContractMethod<[], [bigint], "view">;
 
-    lockedBalanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { amount: BigNumber }>;
+  lockedBalanceOf: TypedContractMethod<[_user: AddressLike], [bigint], "view">;
 
-    lockedBalances(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        CvxLocker.LockedBalanceStructOutput[]
-      ] & {
-        total: BigNumber;
-        unlockable: BigNumber;
-        locked: BigNumber;
+  lockedBalances: TypedContractMethod<
+    [_user: AddressLike],
+    [
+      [bigint, bigint, bigint, CvxLocker.LockedBalanceStructOutput[]] & {
+        total: bigint;
+        unlockable: bigint;
+        locked: bigint;
         lockData: CvxLocker.LockedBalanceStructOutput[];
       }
-    >;
+    ],
+    "view"
+  >;
 
-    lockedSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
+  lockedSupply: TypedContractMethod<[], [bigint], "view">;
 
-    maximumBoostPayment(overrides?: CallOverrides): Promise<[BigNumber]>;
+  maximumBoostPayment: TypedContractMethod<[], [bigint], "view">;
 
-    maximumStake(overrides?: CallOverrides): Promise<[BigNumber]>;
+  maximumStake: TypedContractMethod<[], [bigint], "view">;
 
-    minimumStake(overrides?: CallOverrides): Promise<[BigNumber]>;
+  minimumStake: TypedContractMethod<[], [bigint], "view">;
 
-    name(overrides?: CallOverrides): Promise<[string]>;
+  name: TypedContractMethod<[], [string], "view">;
 
-    nextBoostRate(overrides?: CallOverrides): Promise<[BigNumber]>;
+  nextBoostRate: TypedContractMethod<[], [bigint], "view">;
 
-    nextMaximumBoostPayment(overrides?: CallOverrides): Promise<[BigNumber]>;
+  nextMaximumBoostPayment: TypedContractMethod<[], [bigint], "view">;
 
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  notifyRewardAmount: TypedContractMethod<
+    [_rewardsToken: AddressLike, _reward: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    owner(overrides?: CallOverrides): Promise<[string]>;
+  owner: TypedContractMethod<[], [string], "view">;
 
-    "processExpiredLocks(bool)"(
-      _relock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "processExpiredLocks(bool)": TypedContractMethod<
+    [_relock: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    "processExpiredLocks(bool,uint256,address)"(
-      _relock: boolean,
-      _spendRatio: BigNumberish,
-      _withdrawTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "processExpiredLocks(bool,uint256,address)": TypedContractMethod<
+    [_relock: boolean, _spendRatio: BigNumberish, _withdrawTo: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  recoverERC20: TypedContractMethod<
+    [_tokenAddress: AddressLike, _tokenAmount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, number, BigNumber, number, BigNumber] & {
+  rewardData: TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [boolean, bigint, bigint, bigint, bigint] & {
         useBoost: boolean;
-        periodFinish: number;
-        rewardRate: BigNumber;
-        lastUpdateTime: number;
-        rewardPerTokenStored: BigNumber;
+        periodFinish: bigint;
+        rewardRate: bigint;
+        lastUpdateTime: bigint;
+        rewardPerTokenStored: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
 
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+  rewardDistributors: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
 
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  rewardPerToken: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+  rewardTokens: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-    rewardWeightOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { amount: BigNumber }>;
+  rewardWeightOf: TypedContractMethod<[_user: AddressLike], [bigint], "view">;
 
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  rewards: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    rewardsDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
+  rewardsDuration: TypedContractMethod<[], [bigint], "view">;
 
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
 
-    setBoost(
-      _max: BigNumberish,
-      _rate: BigNumberish,
-      _receivingAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setBoost: TypedContractMethod<
+    [_max: BigNumberish, _rate: BigNumberish, _receivingAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setKickIncentive(
-      _rate: BigNumberish,
-      _delay: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setKickIncentive: TypedContractMethod<
+    [_rate: BigNumberish, _delay: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    setStakeLimits(
-      _minimum: BigNumberish,
-      _maximum: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setStakeLimits: TypedContractMethod<
+    [_minimum: BigNumberish, _maximum: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    setStakingContract(
-      _staking: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setStakingContract: TypedContractMethod<
+    [_staking: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    shutdown(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  shutdown: TypedContractMethod<[], [void], "nonpayable">;
 
-    stakeOffsetOnLock(overrides?: CallOverrides): Promise<[BigNumber]>;
+  stakeOffsetOnLock: TypedContractMethod<[], [bigint], "view">;
 
-    stakingProxy(overrides?: CallOverrides): Promise<[string]>;
+  stakingProxy: TypedContractMethod<[], [string], "view">;
 
-    stakingToken(overrides?: CallOverrides): Promise<[string]>;
+  stakingToken: TypedContractMethod<[], [string], "view">;
 
-    symbol(overrides?: CallOverrides): Promise<[string]>;
+  symbol: TypedContractMethod<[], [string], "view">;
 
-    totalSupply(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { supply: BigNumber }>;
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
 
-    totalSupplyAtEpoch(
-      _epoch: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { supply: BigNumber }>;
+  totalSupplyAtEpoch: TypedContractMethod<
+    [_epoch: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    userLocks(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, number] & {
-        amount: BigNumber;
-        boosted: BigNumber;
-        unlockTime: number;
+  userLocks: TypedContractMethod<
+    [arg0: AddressLike, arg1: BigNumberish],
+    [
+      [bigint, bigint, bigint] & {
+        amount: bigint;
+        boosted: bigint;
+        unlockTime: bigint;
       }
-    >;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-  };
-
-  addReward(
-    _rewardsToken: string,
-    _distributor: string,
-    _useBoost: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  approveRewardDistributor(
-    _rewardsToken: string,
-    _distributor: string,
-    _approved: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  balanceAtEpochOf(
-    _epoch: BigNumberish,
-    _user: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  balanceOf(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  balances(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber, number] & {
-      locked: BigNumber;
-      boosted: BigNumber;
-      nextUnlockIndex: number;
-    }
+    ],
+    "view"
   >;
 
-  boostPayment(overrides?: CallOverrides): Promise<string>;
-
-  boostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-  boostedSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  checkpointEpoch(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimableRewards(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<CvxLocker.EarnedDataStructOutput[]>;
-
-  cvxCrv(overrides?: CallOverrides): Promise<string>;
-
-  cvxcrvStaking(overrides?: CallOverrides): Promise<string>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
-
-  denominator(overrides?: CallOverrides): Promise<BigNumber>;
-
-  epochCount(overrides?: CallOverrides): Promise<BigNumber>;
-
-  epochs(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[BigNumber, number] & { supply: BigNumber; date: number }>;
-
-  findEpochId(
-    _time: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "getReward(address,bool)"(
-    _account: string,
-    _stake: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "getReward(address)"(
-    _account: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  getRewardForDuration(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  isShutdown(overrides?: CallOverrides): Promise<boolean>;
-
-  kickExpiredLocks(
-    _account: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  kickRewardEpochDelay(overrides?: CallOverrides): Promise<BigNumber>;
-
-  kickRewardPerEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  lastTimeRewardApplicable(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  lock(
-    _account: string,
-    _amount: BigNumberish,
-    _spendRatio: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  lockDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-  lockedBalanceOf(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  lockedBalances(
-    _user: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber, BigNumber, CvxLocker.LockedBalanceStructOutput[]] & {
-      total: BigNumber;
-      unlockable: BigNumber;
-      locked: BigNumber;
-      lockData: CvxLocker.LockedBalanceStructOutput[];
-    }
+  userRewardPerTokenPaid: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
   >;
 
-  lockedSupply(overrides?: CallOverrides): Promise<BigNumber>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  maximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-  maximumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-  minimumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  nextBoostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-  nextMaximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-  notifyRewardAmount(
-    _rewardsToken: string,
-    _reward: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  "processExpiredLocks(bool)"(
-    _relock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "processExpiredLocks(bool,uint256,address)"(
-    _relock: boolean,
-    _spendRatio: BigNumberish,
-    _withdrawTo: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  recoverERC20(
-    _tokenAddress: string,
-    _tokenAmount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  rewardData(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [boolean, number, BigNumber, number, BigNumber] & {
-      useBoost: boolean;
-      periodFinish: number;
-      rewardRate: BigNumber;
-      lastUpdateTime: number;
-      rewardPerTokenStored: BigNumber;
-    }
+  getFunction(
+    nameOrSignature: "addReward"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _useBoost: boolean],
+    [void],
+    "nonpayable"
   >;
-
-  rewardDistributors(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  rewardPerToken(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  rewardTokens(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  rewardWeightOf(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  rewards(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setBoost(
-    _max: BigNumberish,
-    _rate: BigNumberish,
-    _receivingAddress: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setKickIncentive(
-    _rate: BigNumberish,
-    _delay: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setStakeLimits(
-    _minimum: BigNumberish,
-    _maximum: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setStakingContract(
-    _staking: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  shutdown(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  stakeOffsetOnLock(overrides?: CallOverrides): Promise<BigNumber>;
-
-  stakingProxy(overrides?: CallOverrides): Promise<string>;
-
-  stakingToken(overrides?: CallOverrides): Promise<string>;
-
-  symbol(overrides?: CallOverrides): Promise<string>;
-
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  totalSupplyAtEpoch(
-    _epoch: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  userLocks(
-    arg0: string,
-    arg1: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber, number] & {
-      amount: BigNumber;
-      boosted: BigNumber;
-      unlockTime: number;
-    }
+  getFunction(
+    nameOrSignature: "approveRewardDistributor"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _approved: boolean],
+    [void],
+    "nonpayable"
   >;
-
-  userRewardPerTokenPaid(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  callStatic: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      _useBoost: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    balanceAtEpochOf(
-      _epoch: BigNumberish,
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    balanceOf(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    balances(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, number] & {
-        locked: BigNumber;
-        boosted: BigNumber;
-        nextUnlockIndex: number;
+  getFunction(
+    nameOrSignature: "balanceAtEpochOf"
+  ): TypedContractMethod<
+    [_epoch: BigNumberish, _user: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[_user: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "balances"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, bigint, bigint] & {
+        locked: bigint;
+        boosted: bigint;
+        nextUnlockIndex: bigint;
       }
-    >;
-
-    boostPayment(overrides?: CallOverrides): Promise<string>;
-
-    boostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-    boostedSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    checkpointEpoch(overrides?: CallOverrides): Promise<void>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<CvxLocker.EarnedDataStructOutput[]>;
-
-    cvxCrv(overrides?: CallOverrides): Promise<string>;
-
-    cvxcrvStaking(overrides?: CallOverrides): Promise<string>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
-
-    denominator(overrides?: CallOverrides): Promise<BigNumber>;
-
-    epochCount(overrides?: CallOverrides): Promise<BigNumber>;
-
-    epochs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, number] & { supply: BigNumber; date: number }>;
-
-    findEpochId(
-      _time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "getReward(address,bool)"(
-      _account: string,
-      _stake: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "getReward(address)"(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    isShutdown(overrides?: CallOverrides): Promise<boolean>;
-
-    kickExpiredLocks(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    kickRewardEpochDelay(overrides?: CallOverrides): Promise<BigNumber>;
-
-    kickRewardPerEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    lock(
-      _account: string,
-      _amount: BigNumberish,
-      _spendRatio: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    lockDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    lockedBalanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    lockedBalances(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        CvxLocker.LockedBalanceStructOutput[]
-      ] & {
-        total: BigNumber;
-        unlockable: BigNumber;
-        locked: BigNumber;
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "boostPayment"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "boostRate"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "boostedSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "checkpointEpoch"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "claimableRewards"
+  ): TypedContractMethod<
+    [_account: AddressLike],
+    [CvxLocker.EarnedDataStructOutput[]],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "cvxCrv"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "cvxcrvStaking"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "decimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "denominator"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "epochCount"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "epochs"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, bigint] & { supply: bigint; date: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "findEpochId"
+  ): TypedContractMethod<[_time: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getReward(address,bool)"
+  ): TypedContractMethod<
+    [_account: AddressLike, _stake: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "getReward(address)"
+  ): TypedContractMethod<[_account: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getRewardForDuration"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "isShutdown"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "kickExpiredLocks"
+  ): TypedContractMethod<[_account: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "kickRewardEpochDelay"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "kickRewardPerEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "lastTimeRewardApplicable"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "lock"
+  ): TypedContractMethod<
+    [_account: AddressLike, _amount: BigNumberish, _spendRatio: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "lockDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "lockedBalanceOf"
+  ): TypedContractMethod<[_user: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "lockedBalances"
+  ): TypedContractMethod<
+    [_user: AddressLike],
+    [
+      [bigint, bigint, bigint, CvxLocker.LockedBalanceStructOutput[]] & {
+        total: bigint;
+        unlockable: bigint;
+        locked: bigint;
         lockData: CvxLocker.LockedBalanceStructOutput[];
       }
-    >;
-
-    lockedSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maximumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-    minimumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    nextBoostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nextMaximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    "processExpiredLocks(bool)"(
-      _relock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "processExpiredLocks(bool,uint256,address)"(
-      _relock: boolean,
-      _spendRatio: BigNumberish,
-      _withdrawTo: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, number, BigNumber, number, BigNumber] & {
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "lockedSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "maximumBoostPayment"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "maximumStake"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "minimumStake"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "nextBoostRate"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "nextMaximumBoostPayment"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "notifyRewardAmount"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _reward: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "processExpiredLocks(bool)"
+  ): TypedContractMethod<[_relock: boolean], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "processExpiredLocks(bool,uint256,address)"
+  ): TypedContractMethod<
+    [_relock: boolean, _spendRatio: BigNumberish, _withdrawTo: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "recoverERC20"
+  ): TypedContractMethod<
+    [_tokenAddress: AddressLike, _tokenAmount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "rewardData"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [boolean, bigint, bigint, bigint, bigint] & {
         useBoost: boolean;
-        periodFinish: number;
-        rewardRate: BigNumber;
-        lastUpdateTime: number;
-        rewardPerTokenStored: BigNumber;
+        periodFinish: bigint;
+        rewardRate: bigint;
+        lastUpdateTime: bigint;
+        rewardPerTokenStored: bigint;
       }
-    >;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    rewardWeightOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    setBoost(
-      _max: BigNumberish,
-      _rate: BigNumberish,
-      _receivingAddress: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setKickIncentive(
-      _rate: BigNumberish,
-      _delay: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setStakeLimits(
-      _minimum: BigNumberish,
-      _maximum: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setStakingContract(
-      _staking: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    shutdown(overrides?: CallOverrides): Promise<void>;
-
-    stakeOffsetOnLock(overrides?: CallOverrides): Promise<BigNumber>;
-
-    stakingProxy(overrides?: CallOverrides): Promise<string>;
-
-    stakingToken(overrides?: CallOverrides): Promise<string>;
-
-    symbol(overrides?: CallOverrides): Promise<string>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupplyAtEpoch(
-      _epoch: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    userLocks(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, number] & {
-        amount: BigNumber;
-        boosted: BigNumber;
-        unlockTime: number;
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardDistributors"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardPerToken"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "rewardTokens"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "rewardWeightOf"
+  ): TypedContractMethod<[_user: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "rewards"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardsDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setBoost"
+  ): TypedContractMethod<
+    [_max: BigNumberish, _rate: BigNumberish, _receivingAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setKickIncentive"
+  ): TypedContractMethod<
+    [_rate: BigNumberish, _delay: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setStakeLimits"
+  ): TypedContractMethod<
+    [_minimum: BigNumberish, _maximum: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setStakingContract"
+  ): TypedContractMethod<[_staking: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "shutdown"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stakeOffsetOnLock"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "stakingProxy"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "stakingToken"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalSupplyAtEpoch"
+  ): TypedContractMethod<[_epoch: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "userLocks"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: BigNumberish],
+    [
+      [bigint, bigint, bigint] & {
+        amount: bigint;
+        boosted: bigint;
+        unlockTime: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "userRewardPerTokenPaid"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
+  getEvent(
+    key: "KickReward"
+  ): TypedContractEvent<
+    KickRewardEvent.InputTuple,
+    KickRewardEvent.OutputTuple,
+    KickRewardEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "Recovered"
+  ): TypedContractEvent<
+    RecoveredEvent.InputTuple,
+    RecoveredEvent.OutputTuple,
+    RecoveredEvent.OutputObject
+  >;
+  getEvent(
+    key: "RewardAdded"
+  ): TypedContractEvent<
+    RewardAddedEvent.InputTuple,
+    RewardAddedEvent.OutputTuple,
+    RewardAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RewardPaid"
+  ): TypedContractEvent<
+    RewardPaidEvent.InputTuple,
+    RewardPaidEvent.OutputTuple,
+    RewardPaidEvent.OutputObject
+  >;
+  getEvent(
+    key: "Staked"
+  ): TypedContractEvent<
+    StakedEvent.InputTuple,
+    StakedEvent.OutputTuple,
+    StakedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Withdrawn"
+  ): TypedContractEvent<
+    WithdrawnEvent.InputTuple,
+    WithdrawnEvent.OutputTuple,
+    WithdrawnEvent.OutputObject
+  >;
 
   filters: {
-    "KickReward(address,address,uint256)"(
-      _user?: string | null,
-      _kicked?: string | null,
-      _reward?: null
-    ): KickRewardEventFilter;
-    KickReward(
-      _user?: string | null,
-      _kicked?: string | null,
-      _reward?: null
-    ): KickRewardEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-
-    "Recovered(address,uint256)"(
-      _token?: null,
-      _amount?: null
-    ): RecoveredEventFilter;
-    Recovered(_token?: null, _amount?: null): RecoveredEventFilter;
-
-    "RewardAdded(address,uint256)"(
-      _token?: string | null,
-      _reward?: null
-    ): RewardAddedEventFilter;
-    RewardAdded(_token?: string | null, _reward?: null): RewardAddedEventFilter;
-
-    "RewardPaid(address,address,uint256)"(
-      _user?: string | null,
-      _rewardsToken?: string | null,
-      _reward?: null
-    ): RewardPaidEventFilter;
-    RewardPaid(
-      _user?: string | null,
-      _rewardsToken?: string | null,
-      _reward?: null
-    ): RewardPaidEventFilter;
-
-    "Staked(address,uint256,uint256,uint256)"(
-      _user?: string | null,
-      _paidAmount?: null,
-      _lockedAmount?: null,
-      _boostedAmount?: null
-    ): StakedEventFilter;
-    Staked(
-      _user?: string | null,
-      _paidAmount?: null,
-      _lockedAmount?: null,
-      _boostedAmount?: null
-    ): StakedEventFilter;
-
-    "Withdrawn(address,uint256,bool)"(
-      _user?: string | null,
-      _amount?: null,
-      _relocked?: null
-    ): WithdrawnEventFilter;
-    Withdrawn(
-      _user?: string | null,
-      _amount?: null,
-      _relocked?: null
-    ): WithdrawnEventFilter;
-  };
-
-  estimateGas: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      _useBoost: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    balanceAtEpochOf(
-      _epoch: BigNumberish,
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    balanceOf(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    balances(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    boostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-    boostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-    boostedSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    checkpointEpoch(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    cvxCrv(overrides?: CallOverrides): Promise<BigNumber>;
-
-    cvxcrvStaking(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
-
-    denominator(overrides?: CallOverrides): Promise<BigNumber>;
-
-    epochCount(overrides?: CallOverrides): Promise<BigNumber>;
-
-    epochs(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    findEpochId(
-      _time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "getReward(address,bool)"(
-      _account: string,
-      _stake: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "getReward(address)"(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    isShutdown(overrides?: CallOverrides): Promise<BigNumber>;
-
-    kickExpiredLocks(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    kickRewardEpochDelay(overrides?: CallOverrides): Promise<BigNumber>;
-
-    kickRewardPerEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    lock(
-      _account: string,
-      _amount: BigNumberish,
-      _spendRatio: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    lockDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    lockedBalanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    lockedBalances(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    lockedSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maximumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-    minimumStake(overrides?: CallOverrides): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nextBoostRate(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nextMaximumBoostPayment(overrides?: CallOverrides): Promise<BigNumber>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "processExpiredLocks(bool)"(
-      _relock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "processExpiredLocks(bool,uint256,address)"(
-      _relock: boolean,
-      _spendRatio: BigNumberish,
-      _withdrawTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    rewardData(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardWeightOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    setBoost(
-      _max: BigNumberish,
-      _rate: BigNumberish,
-      _receivingAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setKickIncentive(
-      _rate: BigNumberish,
-      _delay: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setStakeLimits(
-      _minimum: BigNumberish,
-      _maximum: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setStakingContract(
-      _staking: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    shutdown(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    stakeOffsetOnLock(overrides?: CallOverrides): Promise<BigNumber>;
-
-    stakingProxy(overrides?: CallOverrides): Promise<BigNumber>;
-
-    stakingToken(overrides?: CallOverrides): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupplyAtEpoch(
-      _epoch: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    userLocks(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      _useBoost: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    balanceAtEpochOf(
-      _epoch: BigNumberish,
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    balances(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    boostPayment(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    boostRate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    boostedSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    checkpointEpoch(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    cvxCrv(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    cvxcrvStaking(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    denominator(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    epochCount(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    epochs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    findEpochId(
-      _time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "getReward(address,bool)"(
-      _account: string,
-      _stake: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "getReward(address)"(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    isShutdown(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    kickExpiredLocks(
-      _account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    kickRewardEpochDelay(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    kickRewardPerEpoch(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    lock(
-      _account: string,
-      _amount: BigNumberish,
-      _spendRatio: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    lockDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    lockedBalanceOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    lockedBalances(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    lockedSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    maximumBoostPayment(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maximumStake(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    minimumStake(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    nextBoostRate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    nextMaximumBoostPayment(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "processExpiredLocks(bool)"(
-      _relock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "processExpiredLocks(bool,uint256,address)"(
-      _relock: boolean,
-      _spendRatio: BigNumberish,
-      _withdrawTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardWeightOf(
-      _user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setBoost(
-      _max: BigNumberish,
-      _rate: BigNumberish,
-      _receivingAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setKickIncentive(
-      _rate: BigNumberish,
-      _delay: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setStakeLimits(
-      _minimum: BigNumberish,
-      _maximum: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setStakingContract(
-      _staking: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    shutdown(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stakeOffsetOnLock(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    stakingProxy(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    stakingToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalSupplyAtEpoch(
-      _epoch: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    userLocks(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "KickReward(address,address,uint256)": TypedContractEvent<
+      KickRewardEvent.InputTuple,
+      KickRewardEvent.OutputTuple,
+      KickRewardEvent.OutputObject
+    >;
+    KickReward: TypedContractEvent<
+      KickRewardEvent.InputTuple,
+      KickRewardEvent.OutputTuple,
+      KickRewardEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "Recovered(address,uint256)": TypedContractEvent<
+      RecoveredEvent.InputTuple,
+      RecoveredEvent.OutputTuple,
+      RecoveredEvent.OutputObject
+    >;
+    Recovered: TypedContractEvent<
+      RecoveredEvent.InputTuple,
+      RecoveredEvent.OutputTuple,
+      RecoveredEvent.OutputObject
+    >;
+
+    "RewardAdded(address,uint256)": TypedContractEvent<
+      RewardAddedEvent.InputTuple,
+      RewardAddedEvent.OutputTuple,
+      RewardAddedEvent.OutputObject
+    >;
+    RewardAdded: TypedContractEvent<
+      RewardAddedEvent.InputTuple,
+      RewardAddedEvent.OutputTuple,
+      RewardAddedEvent.OutputObject
+    >;
+
+    "RewardPaid(address,address,uint256)": TypedContractEvent<
+      RewardPaidEvent.InputTuple,
+      RewardPaidEvent.OutputTuple,
+      RewardPaidEvent.OutputObject
+    >;
+    RewardPaid: TypedContractEvent<
+      RewardPaidEvent.InputTuple,
+      RewardPaidEvent.OutputTuple,
+      RewardPaidEvent.OutputObject
+    >;
+
+    "Staked(address,uint256,uint256,uint256)": TypedContractEvent<
+      StakedEvent.InputTuple,
+      StakedEvent.OutputTuple,
+      StakedEvent.OutputObject
+    >;
+    Staked: TypedContractEvent<
+      StakedEvent.InputTuple,
+      StakedEvent.OutputTuple,
+      StakedEvent.OutputObject
+    >;
+
+    "Withdrawn(address,uint256,bool)": TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
+    Withdrawn: TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
   };
 }

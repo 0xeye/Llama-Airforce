@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type { VlCVX, VlCVXInterface } from "../../Tokens/VlCVX";
 
 const _abi = [
@@ -1291,9 +1290,9 @@ const _abi = [
 export class VlCVX__factory {
   static readonly abi = _abi;
   static createInterface(): VlCVXInterface {
-    return new utils.Interface(_abi) as VlCVXInterface;
+    return new Interface(_abi) as VlCVXInterface;
   }
-  static connect(address: string, signerOrProvider: Signer | Provider): VlCVX {
-    return new Contract(address, _abi, signerOrProvider) as VlCVX;
+  static connect(address: string, runner?: ContractRunner | null): VlCVX {
+    return new Contract(address, _abi, runner) as unknown as VlCVX;
   }
 }

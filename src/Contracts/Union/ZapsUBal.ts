@@ -3,51 +3,27 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PayableOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface ZapsUBalInterface extends utils.Interface {
-  functions: {
-    "AURABAL_PT_DEPOSIT()": FunctionFragment;
-    "AURABAL_STAKING()": FunctionFragment;
-    "AURABAL_TOKEN()": FunctionFragment;
-    "AURA_TOKEN()": FunctionFragment;
-    "BAL_ETH_POOL_TOKEN()": FunctionFragment;
-    "BAL_TOKEN()": FunctionFragment;
-    "BAL_VAULT()": FunctionFragment;
-    "BBUSD_TOKEN()": FunctionFragment;
-    "WETH_TOKEN()": FunctionFragment;
-    "auraBalStaking()": FunctionFragment;
-    "balVault()": FunctionFragment;
-    "bptDepositor()": FunctionFragment;
-    "claimFromVaultAsUnderlying(uint256,uint256,uint256,address,bool)": FunctionFragment;
-    "claimFromVaultViaUniV2EthPair(uint256,uint256,address,address,address)": FunctionFragment;
-    "depositFromEth(uint256,address,bool)": FunctionFragment;
-    "depositFromUnderlyingAssets(uint256[2],uint256,address,bool)": FunctionFragment;
-    "depositViaUniV2EthPair(uint256,uint256,address,address,address,bool)": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "vault()": FunctionFragment;
-  };
-
+export interface ZapsUBalInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "AURABAL_PT_DEPOSIT"
       | "AURABAL_STAKING"
       | "AURABAL_TOKEN"
@@ -110,23 +86,30 @@ export interface ZapsUBalInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultAsUnderlying",
-    values: [BigNumberish, BigNumberish, BigNumberish, string, boolean]
+    values: [BigNumberish, BigNumberish, BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "claimFromVaultViaUniV2EthPair",
-    values: [BigNumberish, BigNumberish, string, string, string]
+    values: [BigNumberish, BigNumberish, AddressLike, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "depositFromEth",
-    values: [BigNumberish, string, boolean]
+    values: [BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "depositFromUnderlyingAssets",
-    values: [[BigNumberish, BigNumberish], BigNumberish, string, boolean]
+    values: [[BigNumberish, BigNumberish], BigNumberish, AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "depositViaUniV2EthPair",
-    values: [BigNumberish, BigNumberish, string, string, string, boolean]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      AddressLike,
+      AddressLike,
+      AddressLike,
+      boolean
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "setApprovals",
@@ -192,408 +175,238 @@ export interface ZapsUBalInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "vault", data: BytesLike): Result;
-
-  events: {};
 }
 
 export interface ZapsUBal extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): ZapsUBal;
+  waitForDeployment(): Promise<this>;
 
   interface: ZapsUBalInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    AURABAL_PT_DEPOSIT(overrides?: CallOverrides): Promise<[string]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    AURABAL_STAKING(overrides?: CallOverrides): Promise<[string]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    AURABAL_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  AURABAL_PT_DEPOSIT: TypedContractMethod<[], [string], "view">;
 
-    AURA_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  AURABAL_STAKING: TypedContractMethod<[], [string], "view">;
 
-    BAL_ETH_POOL_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  AURABAL_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    BAL_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  AURA_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    BAL_VAULT(overrides?: CallOverrides): Promise<[string]>;
+  BAL_ETH_POOL_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    BBUSD_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  BAL_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    WETH_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  BAL_VAULT: TypedContractMethod<[], [string], "view">;
 
-    auraBalStaking(overrides?: CallOverrides): Promise<[string]>;
+  BBUSD_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    balVault(overrides?: CallOverrides): Promise<[string]>;
+  WETH_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    bptDepositor(overrides?: CallOverrides): Promise<[string]>;
+  auraBalStaking: TypedContractMethod<[], [string], "view">;
 
-    claimFromVaultAsUnderlying(
+  balVault: TypedContractMethod<[], [string], "view">;
+
+  bptDepositor: TypedContractMethod<[], [string], "view">;
+
+  claimFromVaultAsUnderlying: TypedContractMethod<
+    [
       _amount: BigNumberish,
       _assetIndex: BigNumberish,
       _minAmountOut: BigNumberish,
-      _to: string,
-      _useWrappedEth: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _to: AddressLike,
+      _useWrappedEth: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    claimFromVaultViaUniV2EthPair(
+  claimFromVaultViaUniV2EthPair: TypedContractMethod<
+    [
       _amount: BigNumberish,
       _minAmountOut: BigNumberish,
-      _router: string,
-      _outputToken: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _router: AddressLike,
+      _outputToken: AddressLike,
+      _to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    depositFromEth(
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  depositFromEth: TypedContractMethod<
+    [_minAmountOut: BigNumberish, _to: AddressLike, _lock: boolean],
+    [void],
+    "payable"
+  >;
 
-    depositFromUnderlyingAssets(
+  depositFromUnderlyingAssets: TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _to: AddressLike,
+      _lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    depositViaUniV2EthPair(
+  depositViaUniV2EthPair: TypedContractMethod<
+    [
       _amount: BigNumberish,
       _minAmountOut: BigNumberish,
-      _router: string,
-      _inputToken: string,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _router: AddressLike,
+      _inputToken: AddressLike,
+      _to: AddressLike,
+      _lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
 
-    vault(overrides?: CallOverrides): Promise<[string]>;
-  };
+  vault: TypedContractMethod<[], [string], "view">;
 
-  AURABAL_PT_DEPOSIT(overrides?: CallOverrides): Promise<string>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  AURABAL_STAKING(overrides?: CallOverrides): Promise<string>;
-
-  AURABAL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  AURA_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  BAL_ETH_POOL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  BAL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  BAL_VAULT(overrides?: CallOverrides): Promise<string>;
-
-  BBUSD_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  WETH_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  auraBalStaking(overrides?: CallOverrides): Promise<string>;
-
-  balVault(overrides?: CallOverrides): Promise<string>;
-
-  bptDepositor(overrides?: CallOverrides): Promise<string>;
-
-  claimFromVaultAsUnderlying(
-    _amount: BigNumberish,
-    _assetIndex: BigNumberish,
-    _minAmountOut: BigNumberish,
-    _to: string,
-    _useWrappedEth: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimFromVaultViaUniV2EthPair(
-    _amount: BigNumberish,
-    _minAmountOut: BigNumberish,
-    _router: string,
-    _outputToken: string,
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositFromEth(
-    _minAmountOut: BigNumberish,
-    _to: string,
-    _lock: boolean,
-    overrides?: PayableOverrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositFromUnderlyingAssets(
-    _amounts: [BigNumberish, BigNumberish],
-    _minAmountOut: BigNumberish,
-    _to: string,
-    _lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositViaUniV2EthPair(
-    _amount: BigNumberish,
-    _minAmountOut: BigNumberish,
-    _router: string,
-    _inputToken: string,
-    _to: string,
-    _lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  vault(overrides?: CallOverrides): Promise<string>;
-
-  callStatic: {
-    AURABAL_PT_DEPOSIT(overrides?: CallOverrides): Promise<string>;
-
-    AURABAL_STAKING(overrides?: CallOverrides): Promise<string>;
-
-    AURABAL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    AURA_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    BAL_ETH_POOL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    BAL_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    BAL_VAULT(overrides?: CallOverrides): Promise<string>;
-
-    BBUSD_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    auraBalStaking(overrides?: CallOverrides): Promise<string>;
-
-    balVault(overrides?: CallOverrides): Promise<string>;
-
-    bptDepositor(overrides?: CallOverrides): Promise<string>;
-
-    claimFromVaultAsUnderlying(
+  getFunction(
+    nameOrSignature: "AURABAL_PT_DEPOSIT"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "AURABAL_STAKING"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "AURABAL_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "AURA_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "BAL_ETH_POOL_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "BAL_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "BAL_VAULT"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "BBUSD_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "WETH_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "auraBalStaking"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "balVault"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "bptDepositor"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "claimFromVaultAsUnderlying"
+  ): TypedContractMethod<
+    [
       _amount: BigNumberish,
       _assetIndex: BigNumberish,
       _minAmountOut: BigNumberish,
-      _to: string,
-      _useWrappedEth: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimFromVaultViaUniV2EthPair(
+      _to: AddressLike,
+      _useWrappedEth: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimFromVaultViaUniV2EthPair"
+  ): TypedContractMethod<
+    [
       _amount: BigNumberish,
       _minAmountOut: BigNumberish,
-      _router: string,
-      _outputToken: string,
-      _to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositFromEth(
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositFromUnderlyingAssets(
+      _router: AddressLike,
+      _outputToken: AddressLike,
+      _to: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositFromEth"
+  ): TypedContractMethod<
+    [_minAmountOut: BigNumberish, _to: AddressLike, _lock: boolean],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "depositFromUnderlyingAssets"
+  ): TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    depositViaUniV2EthPair(
+      _to: AddressLike,
+      _lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositViaUniV2EthPair"
+  ): TypedContractMethod<
+    [
       _amount: BigNumberish,
       _minAmountOut: BigNumberish,
-      _router: string,
-      _inputToken: string,
-      _to: string,
-      _lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    vault(overrides?: CallOverrides): Promise<string>;
-  };
+      _router: AddressLike,
+      _inputToken: AddressLike,
+      _to: AddressLike,
+      _lock: boolean
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "vault"
+  ): TypedContractMethod<[], [string], "view">;
 
   filters: {};
-
-  estimateGas: {
-    AURABAL_PT_DEPOSIT(overrides?: CallOverrides): Promise<BigNumber>;
-
-    AURABAL_STAKING(overrides?: CallOverrides): Promise<BigNumber>;
-
-    AURABAL_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    AURA_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    BAL_ETH_POOL_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    BAL_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    BAL_VAULT(overrides?: CallOverrides): Promise<BigNumber>;
-
-    BBUSD_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    auraBalStaking(overrides?: CallOverrides): Promise<BigNumber>;
-
-    balVault(overrides?: CallOverrides): Promise<BigNumber>;
-
-    bptDepositor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    claimFromVaultAsUnderlying(
-      _amount: BigNumberish,
-      _assetIndex: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _useWrappedEth: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimFromVaultViaUniV2EthPair(
-      _amount: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _router: string,
-      _outputToken: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositFromEth(
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositFromUnderlyingAssets(
-      _amounts: [BigNumberish, BigNumberish],
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositViaUniV2EthPair(
-      _amount: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _router: string,
-      _inputToken: string,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    AURABAL_PT_DEPOSIT(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    AURABAL_STAKING(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    AURABAL_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    AURA_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    BAL_ETH_POOL_TOKEN(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    BAL_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    BAL_VAULT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    BBUSD_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    WETH_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    auraBalStaking(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    balVault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    bptDepositor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    claimFromVaultAsUnderlying(
-      _amount: BigNumberish,
-      _assetIndex: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _useWrappedEth: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimFromVaultViaUniV2EthPair(
-      _amount: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _router: string,
-      _outputToken: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositFromEth(
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositFromUnderlyingAssets(
-      _amounts: [BigNumberish, BigNumberish],
-      _minAmountOut: BigNumberish,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositViaUniV2EthPair(
-      _amount: BigNumberish,
-      _minAmountOut: BigNumberish,
-      _router: string,
-      _inputToken: string,
-      _to: string,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-  };
 }

@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   AragonAgent,
   AragonAgentInterface,
@@ -37,12 +36,9 @@ const _abi = [
 export class AragonAgent__factory {
   static readonly abi = _abi;
   static createInterface(): AragonAgentInterface {
-    return new utils.Interface(_abi) as AragonAgentInterface;
+    return new Interface(_abi) as AragonAgentInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): AragonAgent {
-    return new Contract(address, _abi, signerOrProvider) as AragonAgent;
+  static connect(address: string, runner?: ContractRunner | null): AragonAgent {
+    return new Contract(address, _abi, runner) as unknown as AragonAgent;
   }
 }

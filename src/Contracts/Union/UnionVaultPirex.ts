@@ -3,78 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface UnionVaultPirexInterface extends utils.Interface {
-  functions: {
-    "DOMAIN_SEPARATOR()": FunctionFragment;
-    "FEE_DENOMINATOR()": FunctionFragment;
-    "MAX_PLATFORM_FEE()": FunctionFragment;
-    "MAX_WITHDRAWAL_PENALTY()": FunctionFragment;
-    "allowance(address,address)": FunctionFragment;
-    "approve(address,uint256)": FunctionFragment;
-    "asset()": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "convertToAssets(uint256)": FunctionFragment;
-    "convertToShares(uint256)": FunctionFragment;
-    "decimals()": FunctionFragment;
-    "deposit(uint256,address)": FunctionFragment;
-    "harvest()": FunctionFragment;
-    "maxDeposit(address)": FunctionFragment;
-    "maxMint(address)": FunctionFragment;
-    "maxRedeem(address)": FunctionFragment;
-    "maxWithdraw(address)": FunctionFragment;
-    "mint(uint256,address)": FunctionFragment;
-    "name()": FunctionFragment;
-    "nonces(address)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
-    "platform()": FunctionFragment;
-    "platformFee()": FunctionFragment;
-    "previewDeposit(uint256)": FunctionFragment;
-    "previewMint(uint256)": FunctionFragment;
-    "previewRedeem(uint256)": FunctionFragment;
-    "previewWithdraw(uint256)": FunctionFragment;
-    "redeem(uint256,address,address)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "setPlatform(address)": FunctionFragment;
-    "setPlatformFee(uint256)": FunctionFragment;
-    "setStrategy(address)": FunctionFragment;
-    "setWithdrawalPenalty(uint256)": FunctionFragment;
-    "strategy()": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "totalAssets()": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "transfer(address,uint256)": FunctionFragment;
-    "transferFrom(address,address,uint256)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "withdraw(uint256,address,address)": FunctionFragment;
-    "withdrawalPenalty()": FunctionFragment;
-  };
-
+export interface UnionVaultPirexInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "DOMAIN_SEPARATOR"
       | "FEE_DENOMINATOR"
       | "MAX_PLATFORM_FEE"
@@ -120,6 +71,20 @@ export interface UnionVaultPirexInterface extends utils.Interface {
       | "withdrawalPenalty"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "Approval"
+      | "Deposit"
+      | "Harvest"
+      | "OwnershipTransferred"
+      | "PlatformFeeUpdated"
+      | "PlatformUpdated"
+      | "StrategySet"
+      | "Transfer"
+      | "Withdraw"
+      | "WithdrawalPenaltyUpdated"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "DOMAIN_SEPARATOR",
     values?: undefined
@@ -138,14 +103,17 @@ export interface UnionVaultPirexInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "asset", values?: undefined): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "convertToAssets",
     values: [BigNumberish]
@@ -157,25 +125,37 @@ export interface UnionVaultPirexInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "harvest", values?: undefined): string;
-  encodeFunctionData(functionFragment: "maxDeposit", values: [string]): string;
-  encodeFunctionData(functionFragment: "maxMint", values: [string]): string;
-  encodeFunctionData(functionFragment: "maxRedeem", values: [string]): string;
-  encodeFunctionData(functionFragment: "maxWithdraw", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "maxDeposit",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "maxMint",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "maxRedeem",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "maxWithdraw",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "mint",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
-  encodeFunctionData(functionFragment: "nonces", values: [string]): string;
+  encodeFunctionData(functionFragment: "nonces", values: [AddressLike]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "permit",
     values: [
-      string,
-      string,
+      AddressLike,
+      AddressLike,
       BigNumberish,
       BigNumberish,
       BigNumberish,
@@ -206,18 +186,24 @@ export interface UnionVaultPirexInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "redeem",
-    values: [BigNumberish, string, string]
+    values: [BigNumberish, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "setPlatform", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setPlatform",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "setPlatformFee",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "setStrategy", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setStrategy",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "setWithdrawalPenalty",
     values: [BigNumberish]
@@ -234,19 +220,19 @@ export interface UnionVaultPirexInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish, string, string]
+    values: [BigNumberish, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawalPenalty",
@@ -362,1098 +348,734 @@ export interface UnionVaultPirexInterface extends utils.Interface {
     functionFragment: "withdrawalPenalty",
     data: BytesLike
   ): Result;
-
-  events: {
-    "Approval(address,address,uint256)": EventFragment;
-    "Deposit(address,address,uint256,uint256)": EventFragment;
-    "Harvest(address,uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "PlatformFeeUpdated(uint256)": EventFragment;
-    "PlatformUpdated(address)": EventFragment;
-    "StrategySet(address)": EventFragment;
-    "Transfer(address,address,uint256)": EventFragment;
-    "Withdraw(address,address,address,uint256,uint256)": EventFragment;
-    "WithdrawalPenaltyUpdated(uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Harvest"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PlatformFeeUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PlatformUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "StrategySet"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "WithdrawalPenaltyUpdated"): EventFragment;
 }
 
-export interface ApprovalEventObject {
-  owner: string;
-  spender: string;
-  amount: BigNumber;
+export namespace ApprovalEvent {
+  export type InputTuple = [
+    owner: AddressLike,
+    spender: AddressLike,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [owner: string, spender: string, amount: bigint];
+  export interface OutputObject {
+    owner: string;
+    spender: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber],
-  ApprovalEventObject
->;
 
-export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
-
-export interface DepositEventObject {
-  caller: string;
-  owner: string;
-  assets: BigNumber;
-  shares: BigNumber;
+export namespace DepositEvent {
+  export type InputTuple = [
+    caller: AddressLike,
+    owner: AddressLike,
+    assets: BigNumberish,
+    shares: BigNumberish
+  ];
+  export type OutputTuple = [
+    caller: string,
+    owner: string,
+    assets: bigint,
+    shares: bigint
+  ];
+  export interface OutputObject {
+    caller: string;
+    owner: string;
+    assets: bigint;
+    shares: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type DepositEvent = TypedEvent<
-  [string, string, BigNumber, BigNumber],
-  DepositEventObject
->;
 
-export type DepositEventFilter = TypedEventFilter<DepositEvent>;
-
-export interface HarvestEventObject {
-  caller: string;
-  value: BigNumber;
+export namespace HarvestEvent {
+  export type InputTuple = [caller: AddressLike, value: BigNumberish];
+  export type OutputTuple = [caller: string, value: bigint];
+  export interface OutputObject {
+    caller: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type HarvestEvent = TypedEvent<[string, BigNumber], HarvestEventObject>;
 
-export type HarvestEventFilter = TypedEventFilter<HarvestEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface PlatformFeeUpdatedEventObject {
-  fee: BigNumber;
+export namespace PlatformFeeUpdatedEvent {
+  export type InputTuple = [fee: BigNumberish];
+  export type OutputTuple = [fee: bigint];
+  export interface OutputObject {
+    fee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type PlatformFeeUpdatedEvent = TypedEvent<
-  [BigNumber],
-  PlatformFeeUpdatedEventObject
->;
 
-export type PlatformFeeUpdatedEventFilter =
-  TypedEventFilter<PlatformFeeUpdatedEvent>;
-
-export interface PlatformUpdatedEventObject {
-  _platform: string;
+export namespace PlatformUpdatedEvent {
+  export type InputTuple = [_platform: AddressLike];
+  export type OutputTuple = [_platform: string];
+  export interface OutputObject {
+    _platform: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type PlatformUpdatedEvent = TypedEvent<
-  [string],
-  PlatformUpdatedEventObject
->;
 
-export type PlatformUpdatedEventFilter = TypedEventFilter<PlatformUpdatedEvent>;
-
-export interface StrategySetEventObject {
-  _strategy: string;
+export namespace StrategySetEvent {
+  export type InputTuple = [_strategy: AddressLike];
+  export type OutputTuple = [_strategy: string];
+  export interface OutputObject {
+    _strategy: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type StrategySetEvent = TypedEvent<[string], StrategySetEventObject>;
 
-export type StrategySetEventFilter = TypedEventFilter<StrategySetEvent>;
-
-export interface TransferEventObject {
-  from: string;
-  to: string;
-  amount: BigNumber;
+export namespace TransferEvent {
+  export type InputTuple = [
+    from: AddressLike,
+    to: AddressLike,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [from: string, to: string, amount: bigint];
+  export interface OutputObject {
+    from: string;
+    to: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber],
-  TransferEventObject
->;
 
-export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export interface WithdrawEventObject {
-  caller: string;
-  receiver: string;
-  owner: string;
-  assets: BigNumber;
-  shares: BigNumber;
+export namespace WithdrawEvent {
+  export type InputTuple = [
+    caller: AddressLike,
+    receiver: AddressLike,
+    owner: AddressLike,
+    assets: BigNumberish,
+    shares: BigNumberish
+  ];
+  export type OutputTuple = [
+    caller: string,
+    receiver: string,
+    owner: string,
+    assets: bigint,
+    shares: bigint
+  ];
+  export interface OutputObject {
+    caller: string;
+    receiver: string;
+    owner: string;
+    assets: bigint;
+    shares: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawEvent = TypedEvent<
-  [string, string, string, BigNumber, BigNumber],
-  WithdrawEventObject
->;
 
-export type WithdrawEventFilter = TypedEventFilter<WithdrawEvent>;
-
-export interface WithdrawalPenaltyUpdatedEventObject {
-  penalty: BigNumber;
+export namespace WithdrawalPenaltyUpdatedEvent {
+  export type InputTuple = [penalty: BigNumberish];
+  export type OutputTuple = [penalty: bigint];
+  export interface OutputObject {
+    penalty: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawalPenaltyUpdatedEvent = TypedEvent<
-  [BigNumber],
-  WithdrawalPenaltyUpdatedEventObject
->;
-
-export type WithdrawalPenaltyUpdatedEventFilter =
-  TypedEventFilter<WithdrawalPenaltyUpdatedEvent>;
 
 export interface UnionVaultPirex extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): UnionVaultPirex;
+  waitForDeployment(): Promise<this>;
 
   interface: UnionVaultPirexInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<[BigNumber]>;
+  DOMAIN_SEPARATOR: TypedContractMethod<[], [string], "view">;
 
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<[BigNumber]>;
+  FEE_DENOMINATOR: TypedContractMethod<[], [bigint], "view">;
 
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  MAX_PLATFORM_FEE: TypedContractMethod<[], [bigint], "view">;
 
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  MAX_WITHDRAWAL_PENALTY: TypedContractMethod<[], [bigint], "view">;
 
-    asset(overrides?: CallOverrides): Promise<[string]>;
+  allowance: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  approve: TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    convertToAssets(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  asset: TypedContractMethod<[], [string], "view">;
 
-    convertToShares(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  balanceOf: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
-    decimals(overrides?: CallOverrides): Promise<[number]>;
+  convertToAssets: TypedContractMethod<
+    [shares: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  convertToShares: TypedContractMethod<
+    [assets: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    harvest(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  decimals: TypedContractMethod<[], [bigint], "view">;
 
-    maxDeposit(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  deposit: TypedContractMethod<
+    [assets: BigNumberish, receiver: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
 
-    maxMint(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  harvest: TypedContractMethod<[], [void], "nonpayable">;
 
-    maxRedeem(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  maxDeposit: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
-    maxWithdraw(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  maxMint: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
-    mint(
-      shares: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  maxRedeem: TypedContractMethod<[owner: AddressLike], [bigint], "view">;
 
-    name(overrides?: CallOverrides): Promise<[string]>;
+  maxWithdraw: TypedContractMethod<[owner: AddressLike], [bigint], "view">;
 
-    nonces(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  mint: TypedContractMethod<
+    [shares: BigNumberish, receiver: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
 
-    owner(overrides?: CallOverrides): Promise<[string]>;
+  name: TypedContractMethod<[], [string], "view">;
 
-    permit(
-      owner: string,
-      spender: string,
+  nonces: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
+  owner: TypedContractMethod<[], [string], "view">;
+
+  permit: TypedContractMethod<
+    [
+      owner: AddressLike,
+      spender: AddressLike,
       value: BigNumberish,
       deadline: BigNumberish,
       v: BigNumberish,
       r: BytesLike,
-      s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    platform(overrides?: CallOverrides): Promise<[string]>;
-
-    platformFee(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    previewDeposit(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    previewMint(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    previewRedeem(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    previewWithdraw(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    redeem(
-      shares: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setPlatformFee(
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setStrategy(
-      _strategy: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setWithdrawalPenalty(
-      penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    strategy(overrides?: CallOverrides): Promise<[string]>;
-
-    symbol(overrides?: CallOverrides): Promise<[string]>;
-
-    totalAssets(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    transfer(
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferFrom(
-      from: string,
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    withdraw(
-      assets: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<[BigNumber]>;
-  };
-
-  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
-
-  FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-  allowance(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  approve(
-    spender: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  asset(overrides?: CallOverrides): Promise<string>;
-
-  balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  convertToAssets(
-    shares: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  convertToShares(
-    assets: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
-
-  deposit(
-    assets: BigNumberish,
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  harvest(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  maxDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxMint(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxRedeem(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxWithdraw(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  mint(
-    shares: BigNumberish,
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  permit(
-    owner: string,
-    spender: string,
-    value: BigNumberish,
-    deadline: BigNumberish,
-    v: BigNumberish,
-    r: BytesLike,
-    s: BytesLike,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  platform(overrides?: CallOverrides): Promise<string>;
-
-  platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  previewDeposit(
-    assets: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  previewMint(
-    shares: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  previewRedeem(
-    shares: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  previewWithdraw(
-    assets: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  redeem(
-    shares: BigNumberish,
-    receiver: string,
-    owner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setPlatform(
-    _platform: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setPlatformFee(
-    fee: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setStrategy(
-    _strategy: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setWithdrawalPenalty(
-    penalty: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  strategy(overrides?: CallOverrides): Promise<string>;
-
-  symbol(overrides?: CallOverrides): Promise<string>;
-
-  totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
-
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  transfer(
-    to: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferFrom(
-    from: string,
-    to: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdraw(
-    assets: BigNumberish,
-    receiver: string,
-    owner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-
-  callStatic: {
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    asset(overrides?: CallOverrides): Promise<string>;
-
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    convertToAssets(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    convertToShares(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    harvest(overrides?: CallOverrides): Promise<void>;
-
-    maxDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxMint(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxRedeem(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxWithdraw(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    mint(
-      shares: BigNumberish,
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    permit(
-      owner: string,
-      spender: string,
+      s: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  platform: TypedContractMethod<[], [string], "view">;
+
+  platformFee: TypedContractMethod<[], [bigint], "view">;
+
+  previewDeposit: TypedContractMethod<[assets: BigNumberish], [bigint], "view">;
+
+  previewMint: TypedContractMethod<[shares: BigNumberish], [bigint], "view">;
+
+  previewRedeem: TypedContractMethod<[shares: BigNumberish], [bigint], "view">;
+
+  previewWithdraw: TypedContractMethod<
+    [assets: BigNumberish],
+    [bigint],
+    "view"
+  >;
+
+  redeem: TypedContractMethod<
+    [shares: BigNumberish, receiver: AddressLike, owner: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  setPlatform: TypedContractMethod<
+    [_platform: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setPlatformFee: TypedContractMethod<
+    [fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setStrategy: TypedContractMethod<
+    [_strategy: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setWithdrawalPenalty: TypedContractMethod<
+    [penalty: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  strategy: TypedContractMethod<[], [string], "view">;
+
+  symbol: TypedContractMethod<[], [string], "view">;
+
+  totalAssets: TypedContractMethod<[], [bigint], "view">;
+
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
+
+  transfer: TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+
+  transferFrom: TypedContractMethod<
+    [from: AddressLike, to: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  withdraw: TypedContractMethod<
+    [assets: BigNumberish, receiver: AddressLike, owner: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  withdrawalPenalty: TypedContractMethod<[], [bigint], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "DOMAIN_SEPARATOR"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "FEE_DENOMINATOR"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_PLATFORM_FEE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_WITHDRAWAL_PENALTY"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "allowance"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "asset"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "convertToAssets"
+  ): TypedContractMethod<[shares: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "convertToShares"
+  ): TypedContractMethod<[assets: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "decimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [assets: BigNumberish, receiver: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "harvest"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "maxDeposit"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "maxMint"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "maxRedeem"
+  ): TypedContractMethod<[owner: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "maxWithdraw"
+  ): TypedContractMethod<[owner: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "mint"
+  ): TypedContractMethod<
+    [shares: BigNumberish, receiver: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "nonces"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "permit"
+  ): TypedContractMethod<
+    [
+      owner: AddressLike,
+      spender: AddressLike,
       value: BigNumberish,
       deadline: BigNumberish,
       v: BigNumberish,
       r: BytesLike,
-      s: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      s: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "platform"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "platformFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "previewDeposit"
+  ): TypedContractMethod<[assets: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "previewMint"
+  ): TypedContractMethod<[shares: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "previewRedeem"
+  ): TypedContractMethod<[shares: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "previewWithdraw"
+  ): TypedContractMethod<[assets: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "redeem"
+  ): TypedContractMethod<
+    [shares: BigNumberish, receiver: AddressLike, owner: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setPlatform"
+  ): TypedContractMethod<[_platform: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setPlatformFee"
+  ): TypedContractMethod<[fee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setStrategy"
+  ): TypedContractMethod<[_strategy: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setWithdrawalPenalty"
+  ): TypedContractMethod<[penalty: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "strategy"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "totalAssets"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [from: AddressLike, to: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<
+    [assets: BigNumberish, receiver: AddressLike, owner: AddressLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawalPenalty"
+  ): TypedContractMethod<[], [bigint], "view">;
 
-    platform(overrides?: CallOverrides): Promise<string>;
-
-    platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    previewDeposit(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewMint(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewRedeem(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewWithdraw(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    redeem(
-      shares: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    setPlatform(_platform: string, overrides?: CallOverrides): Promise<void>;
-
-    setPlatformFee(fee: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    setStrategy(_strategy: string, overrides?: CallOverrides): Promise<void>;
-
-    setWithdrawalPenalty(
-      penalty: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    strategy(overrides?: CallOverrides): Promise<string>;
-
-    symbol(overrides?: CallOverrides): Promise<string>;
-
-    totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      to: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferFrom(
-      from: string,
-      to: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    withdraw(
-      assets: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-  };
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "Deposit"
+  ): TypedContractEvent<
+    DepositEvent.InputTuple,
+    DepositEvent.OutputTuple,
+    DepositEvent.OutputObject
+  >;
+  getEvent(
+    key: "Harvest"
+  ): TypedContractEvent<
+    HarvestEvent.InputTuple,
+    HarvestEvent.OutputTuple,
+    HarvestEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "PlatformFeeUpdated"
+  ): TypedContractEvent<
+    PlatformFeeUpdatedEvent.InputTuple,
+    PlatformFeeUpdatedEvent.OutputTuple,
+    PlatformFeeUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "PlatformUpdated"
+  ): TypedContractEvent<
+    PlatformUpdatedEvent.InputTuple,
+    PlatformUpdatedEvent.OutputTuple,
+    PlatformUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "StrategySet"
+  ): TypedContractEvent<
+    StrategySetEvent.InputTuple,
+    StrategySetEvent.OutputTuple,
+    StrategySetEvent.OutputObject
+  >;
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+  getEvent(
+    key: "Withdraw"
+  ): TypedContractEvent<
+    WithdrawEvent.InputTuple,
+    WithdrawEvent.OutputTuple,
+    WithdrawEvent.OutputObject
+  >;
+  getEvent(
+    key: "WithdrawalPenaltyUpdated"
+  ): TypedContractEvent<
+    WithdrawalPenaltyUpdatedEvent.InputTuple,
+    WithdrawalPenaltyUpdatedEvent.OutputTuple,
+    WithdrawalPenaltyUpdatedEvent.OutputObject
+  >;
 
   filters: {
-    "Approval(address,address,uint256)"(
-      owner?: string | null,
-      spender?: string | null,
-      amount?: null
-    ): ApprovalEventFilter;
-    Approval(
-      owner?: string | null,
-      spender?: string | null,
-      amount?: null
-    ): ApprovalEventFilter;
-
-    "Deposit(address,address,uint256,uint256)"(
-      caller?: string | null,
-      owner?: string | null,
-      assets?: null,
-      shares?: null
-    ): DepositEventFilter;
-    Deposit(
-      caller?: string | null,
-      owner?: string | null,
-      assets?: null,
-      shares?: null
-    ): DepositEventFilter;
-
-    "Harvest(address,uint256)"(
-      caller?: string | null,
-      value?: null
-    ): HarvestEventFilter;
-    Harvest(caller?: string | null, value?: null): HarvestEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-
-    "PlatformFeeUpdated(uint256)"(fee?: null): PlatformFeeUpdatedEventFilter;
-    PlatformFeeUpdated(fee?: null): PlatformFeeUpdatedEventFilter;
-
-    "PlatformUpdated(address)"(
-      _platform?: string | null
-    ): PlatformUpdatedEventFilter;
-    PlatformUpdated(_platform?: string | null): PlatformUpdatedEventFilter;
-
-    "StrategySet(address)"(_strategy?: string | null): StrategySetEventFilter;
-    StrategySet(_strategy?: string | null): StrategySetEventFilter;
-
-    "Transfer(address,address,uint256)"(
-      from?: string | null,
-      to?: string | null,
-      amount?: null
-    ): TransferEventFilter;
-    Transfer(
-      from?: string | null,
-      to?: string | null,
-      amount?: null
-    ): TransferEventFilter;
-
-    "Withdraw(address,address,address,uint256,uint256)"(
-      caller?: string | null,
-      receiver?: string | null,
-      owner?: string | null,
-      assets?: null,
-      shares?: null
-    ): WithdrawEventFilter;
-    Withdraw(
-      caller?: string | null,
-      receiver?: string | null,
-      owner?: string | null,
-      assets?: null,
-      shares?: null
-    ): WithdrawEventFilter;
-
-    "WithdrawalPenaltyUpdated(uint256)"(
-      penalty?: null
-    ): WithdrawalPenaltyUpdatedEventFilter;
-    WithdrawalPenaltyUpdated(
-      penalty?: null
-    ): WithdrawalPenaltyUpdatedEventFilter;
-  };
-
-  estimateGas: {
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    asset(overrides?: CallOverrides): Promise<BigNumber>;
-
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    convertToAssets(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    convertToShares(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    harvest(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    maxDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxMint(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxRedeem(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxWithdraw(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    mint(
-      shares: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    permit(
-      owner: string,
-      spender: string,
-      value: BigNumberish,
-      deadline: BigNumberish,
-      v: BigNumberish,
-      r: BytesLike,
-      s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    platform(overrides?: CallOverrides): Promise<BigNumber>;
-
-    platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    previewDeposit(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewMint(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewRedeem(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    previewWithdraw(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    redeem(
-      shares: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setPlatformFee(
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setStrategy(
-      _strategy: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setWithdrawalPenalty(
-      penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    strategy(overrides?: CallOverrides): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferFrom(
-      from: string,
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdraw(
-      assets: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_WITHDRAWAL_PENALTY(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    asset(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    convertToAssets(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    convertToShares(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    harvest(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    maxDeposit(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maxMint(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maxRedeem(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maxWithdraw(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    mint(
-      shares: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    nonces(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    permit(
-      owner: string,
-      spender: string,
-      value: BigNumberish,
-      deadline: BigNumberish,
-      v: BigNumberish,
-      r: BytesLike,
-      s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    platform(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    platformFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    previewDeposit(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    previewMint(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    previewRedeem(
-      shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    previewWithdraw(
-      assets: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    redeem(
-      shares: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setPlatformFee(
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setStrategy(
-      _strategy: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setWithdrawalPenalty(
-      penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    strategy(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalAssets(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferFrom(
-      from: string,
-      to: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      assets: BigNumberish,
-      receiver: string,
-      owner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+
+    "Deposit(address,address,uint256,uint256)": TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+    Deposit: TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+
+    "Harvest(address,uint256)": TypedContractEvent<
+      HarvestEvent.InputTuple,
+      HarvestEvent.OutputTuple,
+      HarvestEvent.OutputObject
+    >;
+    Harvest: TypedContractEvent<
+      HarvestEvent.InputTuple,
+      HarvestEvent.OutputTuple,
+      HarvestEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "PlatformFeeUpdated(uint256)": TypedContractEvent<
+      PlatformFeeUpdatedEvent.InputTuple,
+      PlatformFeeUpdatedEvent.OutputTuple,
+      PlatformFeeUpdatedEvent.OutputObject
+    >;
+    PlatformFeeUpdated: TypedContractEvent<
+      PlatformFeeUpdatedEvent.InputTuple,
+      PlatformFeeUpdatedEvent.OutputTuple,
+      PlatformFeeUpdatedEvent.OutputObject
+    >;
+
+    "PlatformUpdated(address)": TypedContractEvent<
+      PlatformUpdatedEvent.InputTuple,
+      PlatformUpdatedEvent.OutputTuple,
+      PlatformUpdatedEvent.OutputObject
+    >;
+    PlatformUpdated: TypedContractEvent<
+      PlatformUpdatedEvent.InputTuple,
+      PlatformUpdatedEvent.OutputTuple,
+      PlatformUpdatedEvent.OutputObject
+    >;
+
+    "StrategySet(address)": TypedContractEvent<
+      StrategySetEvent.InputTuple,
+      StrategySetEvent.OutputTuple,
+      StrategySetEvent.OutputObject
+    >;
+    StrategySet: TypedContractEvent<
+      StrategySetEvent.InputTuple,
+      StrategySetEvent.OutputTuple,
+      StrategySetEvent.OutputObject
+    >;
+
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+
+    "Withdraw(address,address,address,uint256,uint256)": TypedContractEvent<
+      WithdrawEvent.InputTuple,
+      WithdrawEvent.OutputTuple,
+      WithdrawEvent.OutputObject
+    >;
+    Withdraw: TypedContractEvent<
+      WithdrawEvent.InputTuple,
+      WithdrawEvent.OutputTuple,
+      WithdrawEvent.OutputObject
+    >;
+
+    "WithdrawalPenaltyUpdated(uint256)": TypedContractEvent<
+      WithdrawalPenaltyUpdatedEvent.InputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputObject
+    >;
+    WithdrawalPenaltyUpdated: TypedContractEvent<
+      WithdrawalPenaltyUpdatedEvent.InputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputObject
+    >;
   };
 }

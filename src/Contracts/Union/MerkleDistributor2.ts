@@ -3,66 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface MerkleDistributor2Interface extends utils.Interface {
-  functions: {
-    "CRVETH_CRV_INDEX()": FunctionFragment;
-    "CRVETH_ETH_INDEX()": FunctionFragment;
-    "CRV_TOKEN()": FunctionFragment;
-    "CURVE_CRV_ETH_POOL()": FunctionFragment;
-    "CURVE_CVXCRV_CRV_POOL()": FunctionFragment;
-    "CURVE_CVX_ETH_POOL()": FunctionFragment;
-    "CVXCRV_CRV_INDEX()": FunctionFragment;
-    "CVXCRV_CVXCRV_INDEX()": FunctionFragment;
-    "CVXCRV_STAKING_CONTRACT()": FunctionFragment;
-    "CVXCRV_TOKEN()": FunctionFragment;
-    "CVXETH_CVX_INDEX()": FunctionFragment;
-    "CVXETH_ETH_INDEX()": FunctionFragment;
-    "CVX_TOKEN()": FunctionFragment;
-    "admin()": FunctionFragment;
-    "claim(uint256,address,uint256,bytes32[])": FunctionFragment;
-    "claimAs(uint256,address,uint256,bytes32[],uint8)": FunctionFragment;
-    "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)": FunctionFragment;
-    "depositor()": FunctionFragment;
-    "freeze()": FunctionFragment;
-    "frozen()": FunctionFragment;
-    "isClaimed(uint256)": FunctionFragment;
-    "merkleRoot()": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "stake()": FunctionFragment;
-    "unfreeze()": FunctionFragment;
-    "updateAdmin(address)": FunctionFragment;
-    "updateDepositor(address)": FunctionFragment;
-    "updateMerkleRoot(bytes32,bool)": FunctionFragment;
-    "updateVault(address)": FunctionFragment;
-    "vault()": FunctionFragment;
-    "week()": FunctionFragment;
-  };
-
+export interface MerkleDistributor2Interface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "CRVETH_CRV_INDEX"
       | "CRVETH_ETH_INDEX"
       | "CRV_TOKEN"
@@ -95,6 +58,15 @@ export interface MerkleDistributor2Interface extends utils.Interface {
       | "vault"
       | "week"
   ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "AdminUpdated"
+      | "Claimed"
+      | "DepositorUpdated"
+      | "MerkleRootUpdated"
+      | "VaultUpdated"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "CRVETH_CRV_INDEX",
@@ -145,17 +117,17 @@ export interface MerkleDistributor2Interface extends utils.Interface {
   encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "claim",
-    values: [BigNumberish, string, BigNumberish, BytesLike[]]
+    values: [BigNumberish, AddressLike, BigNumberish, BytesLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "claimAs(uint256,address,uint256,bytes32[],uint8)",
-    values: [BigNumberish, string, BigNumberish, BytesLike[], BigNumberish]
+    values: [BigNumberish, AddressLike, BigNumberish, BytesLike[], BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)",
     values: [
       BigNumberish,
-      string,
+      AddressLike,
       BigNumberish,
       BytesLike[],
       BigNumberish,
@@ -179,16 +151,22 @@ export interface MerkleDistributor2Interface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "stake", values?: undefined): string;
   encodeFunctionData(functionFragment: "unfreeze", values?: undefined): string;
-  encodeFunctionData(functionFragment: "updateAdmin", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "updateAdmin",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "updateDepositor",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "updateMerkleRoot",
     values: [BytesLike, boolean]
   ): string;
-  encodeFunctionData(functionFragment: "updateVault", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "updateVault",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(functionFragment: "vault", values?: undefined): string;
   encodeFunctionData(functionFragment: "week", values?: undefined): string;
 
@@ -277,680 +255,461 @@ export interface MerkleDistributor2Interface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "vault", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "week", data: BytesLike): Result;
-
-  events: {
-    "AdminUpdated(address,address)": EventFragment;
-    "Claimed(uint256,uint256,address,uint256)": EventFragment;
-    "DepositorUpdated(address,address)": EventFragment;
-    "MerkleRootUpdated(bytes32,uint32)": EventFragment;
-    "VaultUpdated(address,address)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "AdminUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Claimed"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "DepositorUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MerkleRootUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "VaultUpdated"): EventFragment;
 }
 
-export interface AdminUpdatedEventObject {
-  oldAdmin: string;
-  newAdmin: string;
+export namespace AdminUpdatedEvent {
+  export type InputTuple = [oldAdmin: AddressLike, newAdmin: AddressLike];
+  export type OutputTuple = [oldAdmin: string, newAdmin: string];
+  export interface OutputObject {
+    oldAdmin: string;
+    newAdmin: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type AdminUpdatedEvent = TypedEvent<
-  [string, string],
-  AdminUpdatedEventObject
->;
 
-export type AdminUpdatedEventFilter = TypedEventFilter<AdminUpdatedEvent>;
-
-export interface ClaimedEventObject {
-  index: BigNumber;
-  amount: BigNumber;
-  account: string;
-  week: BigNumber;
+export namespace ClaimedEvent {
+  export type InputTuple = [
+    index: BigNumberish,
+    amount: BigNumberish,
+    account: AddressLike,
+    week: BigNumberish
+  ];
+  export type OutputTuple = [
+    index: bigint,
+    amount: bigint,
+    account: string,
+    week: bigint
+  ];
+  export interface OutputObject {
+    index: bigint;
+    amount: bigint;
+    account: string;
+    week: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ClaimedEvent = TypedEvent<
-  [BigNumber, BigNumber, string, BigNumber],
-  ClaimedEventObject
->;
 
-export type ClaimedEventFilter = TypedEventFilter<ClaimedEvent>;
-
-export interface DepositorUpdatedEventObject {
-  oldDepositor: string;
-  newDepositor: string;
+export namespace DepositorUpdatedEvent {
+  export type InputTuple = [
+    oldDepositor: AddressLike,
+    newDepositor: AddressLike
+  ];
+  export type OutputTuple = [oldDepositor: string, newDepositor: string];
+  export interface OutputObject {
+    oldDepositor: string;
+    newDepositor: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type DepositorUpdatedEvent = TypedEvent<
-  [string, string],
-  DepositorUpdatedEventObject
->;
 
-export type DepositorUpdatedEventFilter =
-  TypedEventFilter<DepositorUpdatedEvent>;
-
-export interface MerkleRootUpdatedEventObject {
-  merkleRoot: string;
-  week: number;
+export namespace MerkleRootUpdatedEvent {
+  export type InputTuple = [merkleRoot: BytesLike, week: BigNumberish];
+  export type OutputTuple = [merkleRoot: string, week: bigint];
+  export interface OutputObject {
+    merkleRoot: string;
+    week: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type MerkleRootUpdatedEvent = TypedEvent<
-  [string, number],
-  MerkleRootUpdatedEventObject
->;
 
-export type MerkleRootUpdatedEventFilter =
-  TypedEventFilter<MerkleRootUpdatedEvent>;
-
-export interface VaultUpdatedEventObject {
-  oldVault: string;
-  newVault: string;
+export namespace VaultUpdatedEvent {
+  export type InputTuple = [oldVault: AddressLike, newVault: AddressLike];
+  export type OutputTuple = [oldVault: string, newVault: string];
+  export interface OutputObject {
+    oldVault: string;
+    newVault: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type VaultUpdatedEvent = TypedEvent<
-  [string, string],
-  VaultUpdatedEventObject
->;
-
-export type VaultUpdatedEventFilter = TypedEventFilter<VaultUpdatedEvent>;
 
 export interface MerkleDistributor2 extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): MerkleDistributor2;
+  waitForDeployment(): Promise<this>;
 
   interface: MerkleDistributor2Interface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    CRV_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_CRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CRV_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CRV_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_CVXCRV_CRV_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_CVX_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<[string]>;
+  CVXCRV_CRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXCRV_CVXCRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVXCRV_STAKING_CONTRACT: TypedContractMethod<[], [string], "view">;
 
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVXCRV_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CVX_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXETH_CVX_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    admin(overrides?: CallOverrides): Promise<[string]>;
+  CVXETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    claim(
+  CVX_TOKEN: TypedContractMethod<[], [string], "view">;
+
+  admin: TypedContractMethod<[], [string], "view">;
+
+  claim: TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
+      amount: BigNumberish,
+      merkleProof: BytesLike[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  "claimAs(uint256,address,uint256,bytes32[],uint8)": TypedContractMethod<
+    [
+      index: BigNumberish,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      option: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    "claimAs(uint256,address,uint256,bytes32[],uint8)"(
+  "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)": TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    depositor(overrides?: CallOverrides): Promise<[string]>;
-
-    freeze(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    frozen(overrides?: CallOverrides): Promise<[boolean]>;
-
-    isClaimed(
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    merkleRoot(overrides?: CallOverrides): Promise<[string]>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    stake(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    unfreeze(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    updateAdmin(
-      newAdmin: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    updateDepositor(
-      newDepositor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    updateMerkleRoot(
-      _merkleRoot: BytesLike,
-      _unfreeze: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    updateVault(
-      newVault: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<[string]>;
-
-    week(overrides?: CallOverrides): Promise<[number]>;
-  };
-
-  CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-  CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<string>;
-
-  CVXCRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  admin(overrides?: CallOverrides): Promise<string>;
-
-  claim(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "claimAs(uint256,address,uint256,bytes32[],uint8)"(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    option: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"(
-    index: BigNumberish,
-    account: string,
-    amount: BigNumberish,
-    merkleProof: BytesLike[],
-    option: BigNumberish,
-    minAmountOut: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositor(overrides?: CallOverrides): Promise<string>;
-
-  freeze(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  frozen(overrides?: CallOverrides): Promise<boolean>;
-
-  isClaimed(index: BigNumberish, overrides?: CallOverrides): Promise<boolean>;
-
-  merkleRoot(overrides?: CallOverrides): Promise<string>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  stake(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  unfreeze(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  updateAdmin(
-    newAdmin: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  updateDepositor(
-    newDepositor: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  updateMerkleRoot(
-    _merkleRoot: BytesLike,
-    _unfreeze: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  updateVault(
-    newVault: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  vault(overrides?: CallOverrides): Promise<string>;
-
-  week(overrides?: CallOverrides): Promise<number>;
-
-  callStatic: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<string>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    admin(overrides?: CallOverrides): Promise<string>;
-
-    claim(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8)"(
-      index: BigNumberish,
-      account: string,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       option: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      minAmountOut: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"(
+  depositor: TypedContractMethod<[], [string], "view">;
+
+  freeze: TypedContractMethod<[], [void], "nonpayable">;
+
+  frozen: TypedContractMethod<[], [boolean], "view">;
+
+  isClaimed: TypedContractMethod<[index: BigNumberish], [boolean], "view">;
+
+  merkleRoot: TypedContractMethod<[], [string], "view">;
+
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
+
+  stake: TypedContractMethod<[], [void], "nonpayable">;
+
+  unfreeze: TypedContractMethod<[], [void], "nonpayable">;
+
+  updateAdmin: TypedContractMethod<
+    [newAdmin: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  updateDepositor: TypedContractMethod<
+    [newDepositor: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  updateMerkleRoot: TypedContractMethod<
+    [_merkleRoot: BytesLike, _unfreeze: boolean],
+    [void],
+    "nonpayable"
+  >;
+
+  updateVault: TypedContractMethod<
+    [newVault: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  vault: TypedContractMethod<[], [string], "view">;
+
+  week: TypedContractMethod<[], [bigint], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "CRVETH_CRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRVETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRV_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CRV_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVXCRV_CRV_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVX_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_CRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_CVXCRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_STAKING_CONTRACT"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_CVX_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVX_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "admin"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "claim"
+  ): TypedContractMethod<
+    [
       index: BigNumberish,
-      account: string,
+      account: AddressLike,
+      amount: BigNumberish,
+      merkleProof: BytesLike[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimAs(uint256,address,uint256,bytes32[],uint8)"
+  ): TypedContractMethod<
+    [
+      index: BigNumberish,
+      account: AddressLike,
+      amount: BigNumberish,
+      merkleProof: BytesLike[],
+      option: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"
+  ): TypedContractMethod<
+    [
+      index: BigNumberish,
+      account: AddressLike,
       amount: BigNumberish,
       merkleProof: BytesLike[],
       option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      minAmountOut: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositor"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "freeze"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "frozen"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isClaimed"
+  ): TypedContractMethod<[index: BigNumberish], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "merkleRoot"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stake"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "unfreeze"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateAdmin"
+  ): TypedContractMethod<[newAdmin: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateDepositor"
+  ): TypedContractMethod<[newDepositor: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "updateMerkleRoot"
+  ): TypedContractMethod<
+    [_merkleRoot: BytesLike, _unfreeze: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "updateVault"
+  ): TypedContractMethod<[newVault: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "vault"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "week"
+  ): TypedContractMethod<[], [bigint], "view">;
 
-    depositor(overrides?: CallOverrides): Promise<string>;
-
-    freeze(overrides?: CallOverrides): Promise<void>;
-
-    frozen(overrides?: CallOverrides): Promise<boolean>;
-
-    isClaimed(index: BigNumberish, overrides?: CallOverrides): Promise<boolean>;
-
-    merkleRoot(overrides?: CallOverrides): Promise<string>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    stake(overrides?: CallOverrides): Promise<void>;
-
-    unfreeze(overrides?: CallOverrides): Promise<void>;
-
-    updateAdmin(newAdmin: string, overrides?: CallOverrides): Promise<void>;
-
-    updateDepositor(
-      newDepositor: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    updateMerkleRoot(
-      _merkleRoot: BytesLike,
-      _unfreeze: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    updateVault(newVault: string, overrides?: CallOverrides): Promise<void>;
-
-    vault(overrides?: CallOverrides): Promise<string>;
-
-    week(overrides?: CallOverrides): Promise<number>;
-  };
+  getEvent(
+    key: "AdminUpdated"
+  ): TypedContractEvent<
+    AdminUpdatedEvent.InputTuple,
+    AdminUpdatedEvent.OutputTuple,
+    AdminUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Claimed"
+  ): TypedContractEvent<
+    ClaimedEvent.InputTuple,
+    ClaimedEvent.OutputTuple,
+    ClaimedEvent.OutputObject
+  >;
+  getEvent(
+    key: "DepositorUpdated"
+  ): TypedContractEvent<
+    DepositorUpdatedEvent.InputTuple,
+    DepositorUpdatedEvent.OutputTuple,
+    DepositorUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "MerkleRootUpdated"
+  ): TypedContractEvent<
+    MerkleRootUpdatedEvent.InputTuple,
+    MerkleRootUpdatedEvent.OutputTuple,
+    MerkleRootUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "VaultUpdated"
+  ): TypedContractEvent<
+    VaultUpdatedEvent.InputTuple,
+    VaultUpdatedEvent.OutputTuple,
+    VaultUpdatedEvent.OutputObject
+  >;
 
   filters: {
-    "AdminUpdated(address,address)"(
-      oldAdmin?: string | null,
-      newAdmin?: string | null
-    ): AdminUpdatedEventFilter;
-    AdminUpdated(
-      oldAdmin?: string | null,
-      newAdmin?: string | null
-    ): AdminUpdatedEventFilter;
-
-    "Claimed(uint256,uint256,address,uint256)"(
-      index?: null,
-      amount?: BigNumberish | null,
-      account?: string | null,
-      week?: null
-    ): ClaimedEventFilter;
-    Claimed(
-      index?: null,
-      amount?: BigNumberish | null,
-      account?: string | null,
-      week?: null
-    ): ClaimedEventFilter;
-
-    "DepositorUpdated(address,address)"(
-      oldDepositor?: string | null,
-      newDepositor?: string | null
-    ): DepositorUpdatedEventFilter;
-    DepositorUpdated(
-      oldDepositor?: string | null,
-      newDepositor?: string | null
-    ): DepositorUpdatedEventFilter;
-
-    "MerkleRootUpdated(bytes32,uint32)"(
-      merkleRoot?: BytesLike | null,
-      week?: BigNumberish | null
-    ): MerkleRootUpdatedEventFilter;
-    MerkleRootUpdated(
-      merkleRoot?: BytesLike | null,
-      week?: BigNumberish | null
-    ): MerkleRootUpdatedEventFilter;
-
-    "VaultUpdated(address,address)"(
-      oldVault?: string | null,
-      newVault?: string | null
-    ): VaultUpdatedEventFilter;
-    VaultUpdated(
-      oldVault?: string | null,
-      newVault?: string | null
-    ): VaultUpdatedEventFilter;
-  };
-
-  estimateGas: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    admin(overrides?: CallOverrides): Promise<BigNumber>;
-
-    claim(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    freeze(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    frozen(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isClaimed(
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    merkleRoot(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    stake(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    unfreeze(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    updateAdmin(
-      newAdmin: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    updateDepositor(
-      newDepositor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    updateMerkleRoot(
-      _merkleRoot: BytesLike,
-      _unfreeze: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    updateVault(
-      newVault: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<BigNumber>;
-
-    week(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CURVE_CRV_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVXCRV_CRV_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVX_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXCRV_CVXCRV_INDEX(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_STAKING_CONTRACT(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    admin(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    claim(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "claimAs(uint256,address,uint256,bytes32[],uint8,uint256)"(
-      index: BigNumberish,
-      account: string,
-      amount: BigNumberish,
-      merkleProof: BytesLike[],
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    freeze(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    frozen(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    isClaimed(
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    merkleRoot(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stake(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    unfreeze(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    updateAdmin(
-      newAdmin: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    updateDepositor(
-      newDepositor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    updateMerkleRoot(
-      _merkleRoot: BytesLike,
-      _unfreeze: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    updateVault(
-      newVault: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    week(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "AdminUpdated(address,address)": TypedContractEvent<
+      AdminUpdatedEvent.InputTuple,
+      AdminUpdatedEvent.OutputTuple,
+      AdminUpdatedEvent.OutputObject
+    >;
+    AdminUpdated: TypedContractEvent<
+      AdminUpdatedEvent.InputTuple,
+      AdminUpdatedEvent.OutputTuple,
+      AdminUpdatedEvent.OutputObject
+    >;
+
+    "Claimed(uint256,uint256,address,uint256)": TypedContractEvent<
+      ClaimedEvent.InputTuple,
+      ClaimedEvent.OutputTuple,
+      ClaimedEvent.OutputObject
+    >;
+    Claimed: TypedContractEvent<
+      ClaimedEvent.InputTuple,
+      ClaimedEvent.OutputTuple,
+      ClaimedEvent.OutputObject
+    >;
+
+    "DepositorUpdated(address,address)": TypedContractEvent<
+      DepositorUpdatedEvent.InputTuple,
+      DepositorUpdatedEvent.OutputTuple,
+      DepositorUpdatedEvent.OutputObject
+    >;
+    DepositorUpdated: TypedContractEvent<
+      DepositorUpdatedEvent.InputTuple,
+      DepositorUpdatedEvent.OutputTuple,
+      DepositorUpdatedEvent.OutputObject
+    >;
+
+    "MerkleRootUpdated(bytes32,uint32)": TypedContractEvent<
+      MerkleRootUpdatedEvent.InputTuple,
+      MerkleRootUpdatedEvent.OutputTuple,
+      MerkleRootUpdatedEvent.OutputObject
+    >;
+    MerkleRootUpdated: TypedContractEvent<
+      MerkleRootUpdatedEvent.InputTuple,
+      MerkleRootUpdatedEvent.OutputTuple,
+      MerkleRootUpdatedEvent.OutputObject
+    >;
+
+    "VaultUpdated(address,address)": TypedContractEvent<
+      VaultUpdatedEvent.InputTuple,
+      VaultUpdatedEvent.OutputTuple,
+      VaultUpdatedEvent.OutputObject
+    >;
+    VaultUpdated: TypedContractEvent<
+      VaultUpdatedEvent.InputTuple,
+      VaultUpdatedEvent.OutputTuple,
+      VaultUpdatedEvent.OutputObject
+    >;
   };
 }

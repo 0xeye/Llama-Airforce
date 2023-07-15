@@ -3,84 +3,38 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
 export declare namespace CvxFxsStaking {
-  export type EarnedDataStruct = { token: string; amount: BigNumberish };
+  export type EarnedDataStruct = { token: AddressLike; amount: BigNumberish };
 
-  export type EarnedDataStructOutput = [string, BigNumber] & {
+  export type EarnedDataStructOutput = [token: string, amount: bigint] & {
     token: string;
-    amount: BigNumber;
+    amount: bigint;
   };
 }
 
-export interface CvxFxsRewardsInterface extends utils.Interface {
-  functions: {
-    "addReward(address,address)": FunctionFragment;
-    "allowance(address,address)": FunctionFragment;
-    "approve(address,uint256)": FunctionFragment;
-    "approveRewardDistributor(address,address,bool)": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "claimableRewards(address)": FunctionFragment;
-    "cvxfxs()": FunctionFragment;
-    "decimals()": FunctionFragment;
-    "decreaseAllowance(address,uint256)": FunctionFragment;
-    "deposit(uint256,bool)": FunctionFragment;
-    "deposit(uint256)": FunctionFragment;
-    "fxs()": FunctionFragment;
-    "fxsDepositor()": FunctionFragment;
-    "getReward(address,address)": FunctionFragment;
-    "getReward(address)": FunctionFragment;
-    "getRewardForDuration(address)": FunctionFragment;
-    "increaseAllowance(address,uint256)": FunctionFragment;
-    "lastTimeRewardApplicable(address)": FunctionFragment;
-    "name()": FunctionFragment;
-    "notifyRewardAmount(address,uint256)": FunctionFragment;
-    "recoverERC20(address,uint256)": FunctionFragment;
-    "rewardData(address)": FunctionFragment;
-    "rewardDistributors(address,address)": FunctionFragment;
-    "rewardPerToken(address)": FunctionFragment;
-    "rewardRedirect(address)": FunctionFragment;
-    "rewardTokenLength()": FunctionFragment;
-    "rewardTokens(uint256)": FunctionFragment;
-    "rewards(address,address)": FunctionFragment;
-    "rewardsDuration()": FunctionFragment;
-    "setRewardRedirect(address)": FunctionFragment;
-    "stake(uint256)": FunctionFragment;
-    "stakeAll()": FunctionFragment;
-    "stakeFor(address,uint256)": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "transfer(address,uint256)": FunctionFragment;
-    "transferFrom(address,address,uint256)": FunctionFragment;
-    "userRewardPerTokenPaid(address,address)": FunctionFragment;
-    "vefxsProxy()": FunctionFragment;
-    "withdraw(uint256)": FunctionFragment;
-  };
-
+export interface CvxFxsRewardsInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "addReward"
       | "allowance"
       | "approve"
@@ -123,32 +77,49 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
       | "withdraw"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "Approval"
+      | "Recovered"
+      | "RewardAdded(address,uint256)"
+      | "RewardAdded(address,address)"
+      | "RewardDistributorApproved"
+      | "RewardPaid"
+      | "RewardRedirected"
+      | "Staked"
+      | "Transfer"
+      | "Withdrawn"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "addReward",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "approveRewardDistributor",
-    values: [string, string, boolean]
+    values: [AddressLike, AddressLike, boolean]
   ): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "claimableRewards",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "cvxfxs", values?: undefined): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit(uint256,bool)",
@@ -165,45 +136,48 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getReward(address,address)",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getReward(address)",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getRewardForDuration",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "increaseAllowance",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "lastTimeRewardApplicable",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "notifyRewardAmount",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "recoverERC20",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "rewardData", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "rewardData",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "rewardDistributors",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardPerToken",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardRedirect",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardTokenLength",
@@ -215,7 +189,7 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "rewards",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "rewardsDuration",
@@ -223,13 +197,13 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setRewardRedirect",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "stake", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "stakeAll", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "stakeFor",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
@@ -238,15 +212,15 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "userRewardPerTokenPaid",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "vefxsProxy",
@@ -366,1178 +340,756 @@ export interface CvxFxsRewardsInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "vefxsProxy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-
-  events: {
-    "Approval(address,address,uint256)": EventFragment;
-    "Recovered(address,uint256)": EventFragment;
-    "RewardAdded(address,uint256)": EventFragment;
-    "RewardAdded(address,address)": EventFragment;
-    "RewardDistributorApproved(address,address)": EventFragment;
-    "RewardPaid(address,address,uint256)": EventFragment;
-    "RewardRedirected(address,address)": EventFragment;
-    "Staked(address,uint256)": EventFragment;
-    "Transfer(address,address,uint256)": EventFragment;
-    "Withdrawn(address,uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Recovered"): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "RewardAdded(address,uint256)"
-  ): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "RewardAdded(address,address)"
-  ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardDistributorApproved"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardPaid"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardRedirected"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Staked"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
 
-export interface ApprovalEventObject {
-  owner: string;
-  spender: string;
-  value: BigNumber;
+export namespace ApprovalEvent {
+  export type InputTuple = [
+    owner: AddressLike,
+    spender: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [owner: string, spender: string, value: bigint];
+  export interface OutputObject {
+    owner: string;
+    spender: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber],
-  ApprovalEventObject
->;
 
-export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
-
-export interface RecoveredEventObject {
-  _token: string;
-  _amount: BigNumber;
+export namespace RecoveredEvent {
+  export type InputTuple = [_token: AddressLike, _amount: BigNumberish];
+  export type OutputTuple = [_token: string, _amount: bigint];
+  export interface OutputObject {
+    _token: string;
+    _amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RecoveredEvent = TypedEvent<
-  [string, BigNumber],
-  RecoveredEventObject
->;
 
-export type RecoveredEventFilter = TypedEventFilter<RecoveredEvent>;
-
-export interface RewardAdded_address_uint256_EventObject {
-  _token: string;
-  _reward: BigNumber;
+export namespace RewardAdded_address_uint256_Event {
+  export type InputTuple = [_token: AddressLike, _reward: BigNumberish];
+  export type OutputTuple = [_token: string, _reward: bigint];
+  export interface OutputObject {
+    _token: string;
+    _reward: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardAdded_address_uint256_Event = TypedEvent<
-  [string, BigNumber],
-  RewardAdded_address_uint256_EventObject
->;
 
-export type RewardAdded_address_uint256_EventFilter =
-  TypedEventFilter<RewardAdded_address_uint256_Event>;
-
-export interface RewardAdded_address_address_EventObject {
-  _reward: string;
-  _distributor: string;
+export namespace RewardAdded_address_address_Event {
+  export type InputTuple = [_reward: AddressLike, _distributor: AddressLike];
+  export type OutputTuple = [_reward: string, _distributor: string];
+  export interface OutputObject {
+    _reward: string;
+    _distributor: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardAdded_address_address_Event = TypedEvent<
-  [string, string],
-  RewardAdded_address_address_EventObject
->;
 
-export type RewardAdded_address_address_EventFilter =
-  TypedEventFilter<RewardAdded_address_address_Event>;
-
-export interface RewardDistributorApprovedEventObject {
-  _reward: string;
-  _distributor: string;
+export namespace RewardDistributorApprovedEvent {
+  export type InputTuple = [_reward: AddressLike, _distributor: AddressLike];
+  export type OutputTuple = [_reward: string, _distributor: string];
+  export interface OutputObject {
+    _reward: string;
+    _distributor: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardDistributorApprovedEvent = TypedEvent<
-  [string, string],
-  RewardDistributorApprovedEventObject
->;
 
-export type RewardDistributorApprovedEventFilter =
-  TypedEventFilter<RewardDistributorApprovedEvent>;
-
-export interface RewardPaidEventObject {
-  _user: string;
-  _rewardsToken: string;
-  _reward: BigNumber;
+export namespace RewardPaidEvent {
+  export type InputTuple = [
+    _user: AddressLike,
+    _rewardsToken: AddressLike,
+    _reward: BigNumberish
+  ];
+  export type OutputTuple = [
+    _user: string,
+    _rewardsToken: string,
+    _reward: bigint
+  ];
+  export interface OutputObject {
+    _user: string;
+    _rewardsToken: string;
+    _reward: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardPaidEvent = TypedEvent<
-  [string, string, BigNumber],
-  RewardPaidEventObject
->;
 
-export type RewardPaidEventFilter = TypedEventFilter<RewardPaidEvent>;
-
-export interface RewardRedirectedEventObject {
-  _account: string;
-  _forward: string;
+export namespace RewardRedirectedEvent {
+  export type InputTuple = [_account: AddressLike, _forward: AddressLike];
+  export type OutputTuple = [_account: string, _forward: string];
+  export interface OutputObject {
+    _account: string;
+    _forward: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RewardRedirectedEvent = TypedEvent<
-  [string, string],
-  RewardRedirectedEventObject
->;
 
-export type RewardRedirectedEventFilter =
-  TypedEventFilter<RewardRedirectedEvent>;
-
-export interface StakedEventObject {
-  _user: string;
-  _amount: BigNumber;
+export namespace StakedEvent {
+  export type InputTuple = [_user: AddressLike, _amount: BigNumberish];
+  export type OutputTuple = [_user: string, _amount: bigint];
+  export interface OutputObject {
+    _user: string;
+    _amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type StakedEvent = TypedEvent<[string, BigNumber], StakedEventObject>;
 
-export type StakedEventFilter = TypedEventFilter<StakedEvent>;
-
-export interface TransferEventObject {
-  from: string;
-  to: string;
-  value: BigNumber;
+export namespace TransferEvent {
+  export type InputTuple = [
+    from: AddressLike,
+    to: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [from: string, to: string, value: bigint];
+  export interface OutputObject {
+    from: string;
+    to: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber],
-  TransferEventObject
->;
 
-export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export interface WithdrawnEventObject {
-  _user: string;
-  _amount: BigNumber;
+export namespace WithdrawnEvent {
+  export type InputTuple = [_user: AddressLike, _amount: BigNumberish];
+  export type OutputTuple = [_user: string, _amount: bigint];
+  export interface OutputObject {
+    _user: string;
+    _amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawnEvent = TypedEvent<
-  [string, BigNumber],
-  WithdrawnEventObject
->;
-
-export type WithdrawnEventFilter = TypedEventFilter<WithdrawnEvent>;
 
 export interface CvxFxsRewards extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): CvxFxsRewards;
+  waitForDeployment(): Promise<this>;
 
   interface: CvxFxsRewardsInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    balanceOf(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [CvxFxsStaking.EarnedDataStructOutput[]] & {
-        userRewards: CvxFxsStaking.EarnedDataStructOutput[];
-      }
-    >;
-
-    cvxfxs(overrides?: CallOverrides): Promise<[string]>;
-
-    decimals(overrides?: CallOverrides): Promise<[number]>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "deposit(uint256,bool)"(
-      _amount: BigNumberish,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "deposit(uint256)"(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    fxs(overrides?: CallOverrides): Promise<[string]>;
-
-    fxsDepositor(overrides?: CallOverrides): Promise<[string]>;
-
-    "getReward(address,address)"(
-      _address: string,
-      _forwardTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "getReward(address)"(
-      _address: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    name(overrides?: CallOverrides): Promise<[string]>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
-        periodFinish: BigNumber;
-        rewardRate: BigNumber;
-        lastUpdateTime: BigNumber;
-        rewardPerTokenStored: BigNumber;
-      }
-    >;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    rewardRedirect(arg0: string, overrides?: CallOverrides): Promise<[string]>;
-
-    rewardTokenLength(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    setRewardRedirect(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    stake(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    stakeAll(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    stakeFor(
-      _for: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<[string]>;
-
-    totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    vefxsProxy(overrides?: CallOverrides): Promise<[string]>;
-
-    withdraw(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-  };
-
-  addReward(
-    _rewardsToken: string,
-    _distributor: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  allowance(
-    owner: string,
-    spender: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  approve(
-    spender: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  approveRewardDistributor(
-    _rewardsToken: string,
-    _distributor: string,
-    _approved: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  claimableRewards(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<CvxFxsStaking.EarnedDataStructOutput[]>;
-
-  cvxfxs(overrides?: CallOverrides): Promise<string>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
-
-  decreaseAllowance(
-    spender: string,
-    subtractedValue: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "deposit(uint256,bool)"(
-    _amount: BigNumberish,
-    _lock: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "deposit(uint256)"(
-    _amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  fxs(overrides?: CallOverrides): Promise<string>;
-
-  fxsDepositor(overrides?: CallOverrides): Promise<string>;
-
-  "getReward(address,address)"(
-    _address: string,
-    _forwardTo: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "getReward(address)"(
-    _address: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  getRewardForDuration(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  increaseAllowance(
-    spender: string,
-    addedValue: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  lastTimeRewardApplicable(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  notifyRewardAmount(
-    _rewardsToken: string,
-    _reward: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  recoverERC20(
-    _tokenAddress: string,
-    _tokenAmount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  rewardData(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber] & {
-      periodFinish: BigNumber;
-      rewardRate: BigNumber;
-      lastUpdateTime: BigNumber;
-      rewardPerTokenStored: BigNumber;
-    }
+  addReward: TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike],
+    [void],
+    "nonpayable"
   >;
 
-  rewardDistributors(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  allowance: TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-  rewardPerToken(
-    _rewardsToken: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  approve: TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-  rewardRedirect(arg0: string, overrides?: CallOverrides): Promise<string>;
+  approveRewardDistributor: TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _approved: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-  rewardTokenLength(overrides?: CallOverrides): Promise<BigNumber>;
+  balanceOf: TypedContractMethod<[account: AddressLike], [bigint], "view">;
 
-  rewardTokens(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+  claimableRewards: TypedContractMethod<
+    [_account: AddressLike],
+    [CvxFxsStaking.EarnedDataStructOutput[]],
+    "view"
+  >;
 
-  rewards(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  cvxfxs: TypedContractMethod<[], [string], "view">;
 
-  rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
+  decimals: TypedContractMethod<[], [bigint], "view">;
 
-  setRewardRedirect(
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  decreaseAllowance: TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-  stake(
-    _amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  "deposit(uint256,bool)": TypedContractMethod<
+    [_amount: BigNumberish, _lock: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-  stakeAll(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  "deposit(uint256)": TypedContractMethod<
+    [_amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-  stakeFor(
-    _for: string,
-    _amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  fxs: TypedContractMethod<[], [string], "view">;
 
-  symbol(overrides?: CallOverrides): Promise<string>;
+  fxsDepositor: TypedContractMethod<[], [string], "view">;
 
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
+  "getReward(address,address)": TypedContractMethod<
+    [_address: AddressLike, _forwardTo: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-  transfer(
-    recipient: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  "getReward(address)": TypedContractMethod<
+    [_address: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-  transferFrom(
-    sender: string,
-    recipient: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  getRewardForDuration: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-  userRewardPerTokenPaid(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  increaseAllowance: TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-  vefxsProxy(overrides?: CallOverrides): Promise<string>;
+  lastTimeRewardApplicable: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-  withdraw(
-    _amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  name: TypedContractMethod<[], [string], "view">;
 
-  callStatic: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  notifyRewardAmount: TypedContractMethod<
+    [_rewardsToken: AddressLike, _reward: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  recoverERC20: TypedContractMethod<
+    [_tokenAddress: AddressLike, _tokenAmount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<CvxFxsStaking.EarnedDataStructOutput[]>;
-
-    cvxfxs(overrides?: CallOverrides): Promise<string>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "deposit(uint256,bool)"(
-      _amount: BigNumberish,
-      _lock: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "deposit(uint256)"(
-      _amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    fxs(overrides?: CallOverrides): Promise<string>;
-
-    fxsDepositor(overrides?: CallOverrides): Promise<string>;
-
-    "getReward(address,address)"(
-      _address: string,
-      _forwardTo: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "getReward(address)"(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
-        periodFinish: BigNumber;
-        rewardRate: BigNumber;
-        lastUpdateTime: BigNumber;
-        rewardPerTokenStored: BigNumber;
+  rewardData: TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, bigint, bigint, bigint] & {
+        periodFinish: bigint;
+        rewardRate: bigint;
+        lastUpdateTime: bigint;
+        rewardPerTokenStored: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
 
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+  rewardDistributors: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
 
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  rewardPerToken: TypedContractMethod<
+    [_rewardsToken: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    rewardRedirect(arg0: string, overrides?: CallOverrides): Promise<string>;
+  rewardRedirect: TypedContractMethod<[arg0: AddressLike], [string], "view">;
 
-    rewardTokenLength(overrides?: CallOverrides): Promise<BigNumber>;
+  rewardTokenLength: TypedContractMethod<[], [bigint], "view">;
 
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
+  rewardTokens: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  rewards: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
+  rewardsDuration: TypedContractMethod<[], [bigint], "view">;
 
-    setRewardRedirect(_to: string, overrides?: CallOverrides): Promise<void>;
+  setRewardRedirect: TypedContractMethod<
+    [_to: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    stake(_amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
+  stake: TypedContractMethod<[_amount: BigNumberish], [void], "nonpayable">;
 
-    stakeAll(overrides?: CallOverrides): Promise<void>;
+  stakeAll: TypedContractMethod<[], [void], "nonpayable">;
 
-    stakeFor(
-      _for: string,
-      _amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  stakeFor: TypedContractMethod<
+    [_for: AddressLike, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    symbol(overrides?: CallOverrides): Promise<string>;
+  symbol: TypedContractMethod<[], [string], "view">;
 
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
 
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+  transfer: TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+  transferFrom: TypedContractMethod<
+    [sender: AddressLike, recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  userRewardPerTokenPaid: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    vefxsProxy(overrides?: CallOverrides): Promise<string>;
+  vefxsProxy: TypedContractMethod<[], [string], "view">;
 
-    withdraw(_amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
-  };
+  withdraw: TypedContractMethod<[_amount: BigNumberish], [void], "nonpayable">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "addReward"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "allowance"
+  ): TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "approveRewardDistributor"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _distributor: AddressLike, _approved: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[account: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "claimableRewards"
+  ): TypedContractMethod<
+    [_account: AddressLike],
+    [CvxFxsStaking.EarnedDataStructOutput[]],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "cvxfxs"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "decimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "decreaseAllowance"
+  ): TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deposit(uint256,bool)"
+  ): TypedContractMethod<
+    [_amount: BigNumberish, _lock: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deposit(uint256)"
+  ): TypedContractMethod<[_amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "fxs"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "fxsDepositor"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getReward(address,address)"
+  ): TypedContractMethod<
+    [_address: AddressLike, _forwardTo: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "getReward(address)"
+  ): TypedContractMethod<[_address: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getRewardForDuration"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "increaseAllowance"
+  ): TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "lastTimeRewardApplicable"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "notifyRewardAmount"
+  ): TypedContractMethod<
+    [_rewardsToken: AddressLike, _reward: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "recoverERC20"
+  ): TypedContractMethod<
+    [_tokenAddress: AddressLike, _tokenAmount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "rewardData"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, bigint, bigint, bigint] & {
+        periodFinish: bigint;
+        rewardRate: bigint;
+        lastUpdateTime: bigint;
+        rewardPerTokenStored: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardDistributors"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardPerToken"
+  ): TypedContractMethod<[_rewardsToken: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "rewardRedirect"
+  ): TypedContractMethod<[arg0: AddressLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "rewardTokenLength"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "rewardTokens"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "rewards"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rewardsDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "setRewardRedirect"
+  ): TypedContractMethod<[_to: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stake"
+  ): TypedContractMethod<[_amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stakeAll"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stakeFor"
+  ): TypedContractMethod<
+    [_for: AddressLike, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [sender: AddressLike, recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "userRewardPerTokenPaid"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "vefxsProxy"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<[_amount: BigNumberish], [void], "nonpayable">;
+
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "Recovered"
+  ): TypedContractEvent<
+    RecoveredEvent.InputTuple,
+    RecoveredEvent.OutputTuple,
+    RecoveredEvent.OutputObject
+  >;
+  getEvent(
+    key: "RewardAdded(address,uint256)"
+  ): TypedContractEvent<
+    RewardAdded_address_uint256_Event.InputTuple,
+    RewardAdded_address_uint256_Event.OutputTuple,
+    RewardAdded_address_uint256_Event.OutputObject
+  >;
+  getEvent(
+    key: "RewardAdded(address,address)"
+  ): TypedContractEvent<
+    RewardAdded_address_address_Event.InputTuple,
+    RewardAdded_address_address_Event.OutputTuple,
+    RewardAdded_address_address_Event.OutputObject
+  >;
+  getEvent(
+    key: "RewardDistributorApproved"
+  ): TypedContractEvent<
+    RewardDistributorApprovedEvent.InputTuple,
+    RewardDistributorApprovedEvent.OutputTuple,
+    RewardDistributorApprovedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RewardPaid"
+  ): TypedContractEvent<
+    RewardPaidEvent.InputTuple,
+    RewardPaidEvent.OutputTuple,
+    RewardPaidEvent.OutputObject
+  >;
+  getEvent(
+    key: "RewardRedirected"
+  ): TypedContractEvent<
+    RewardRedirectedEvent.InputTuple,
+    RewardRedirectedEvent.OutputTuple,
+    RewardRedirectedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Staked"
+  ): TypedContractEvent<
+    StakedEvent.InputTuple,
+    StakedEvent.OutputTuple,
+    StakedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+  getEvent(
+    key: "Withdrawn"
+  ): TypedContractEvent<
+    WithdrawnEvent.InputTuple,
+    WithdrawnEvent.OutputTuple,
+    WithdrawnEvent.OutputObject
+  >;
 
   filters: {
-    "Approval(address,address,uint256)"(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-    Approval(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-
-    "Recovered(address,uint256)"(
-      _token?: null,
-      _amount?: null
-    ): RecoveredEventFilter;
-    Recovered(_token?: null, _amount?: null): RecoveredEventFilter;
-
-    "RewardAdded(address,uint256)"(
-      _token?: string | null,
-      _reward?: null
-    ): RewardAdded_address_uint256_EventFilter;
-    "RewardAdded(address,address)"(
-      _reward?: string | null,
-      _distributor?: string | null
-    ): RewardAdded_address_address_EventFilter;
-
-    "RewardDistributorApproved(address,address)"(
-      _reward?: string | null,
-      _distributor?: string | null
-    ): RewardDistributorApprovedEventFilter;
-    RewardDistributorApproved(
-      _reward?: string | null,
-      _distributor?: string | null
-    ): RewardDistributorApprovedEventFilter;
-
-    "RewardPaid(address,address,uint256)"(
-      _user?: string | null,
-      _rewardsToken?: string | null,
-      _reward?: null
-    ): RewardPaidEventFilter;
-    RewardPaid(
-      _user?: string | null,
-      _rewardsToken?: string | null,
-      _reward?: null
-    ): RewardPaidEventFilter;
-
-    "RewardRedirected(address,address)"(
-      _account?: string | null,
-      _forward?: null
-    ): RewardRedirectedEventFilter;
-    RewardRedirected(
-      _account?: string | null,
-      _forward?: null
-    ): RewardRedirectedEventFilter;
-
-    "Staked(address,uint256)"(
-      _user?: string | null,
-      _amount?: null
-    ): StakedEventFilter;
-    Staked(_user?: string | null, _amount?: null): StakedEventFilter;
-
-    "Transfer(address,address,uint256)"(
-      from?: string | null,
-      to?: string | null,
-      value?: null
-    ): TransferEventFilter;
-    Transfer(
-      from?: string | null,
-      to?: string | null,
-      value?: null
-    ): TransferEventFilter;
-
-    "Withdrawn(address,uint256)"(
-      _user?: string | null,
-      _amount?: null
-    ): WithdrawnEventFilter;
-    Withdrawn(_user?: string | null, _amount?: null): WithdrawnEventFilter;
-  };
-
-  estimateGas: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    cvxfxs(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "deposit(uint256,bool)"(
-      _amount: BigNumberish,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "deposit(uint256)"(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    fxs(overrides?: CallOverrides): Promise<BigNumber>;
-
-    fxsDepositor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "getReward(address,address)"(
-      _address: string,
-      _forwardTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "getReward(address)"(
-      _address: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    rewardData(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardRedirect(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardTokenLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setRewardRedirect(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    stake(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    stakeAll(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    stakeFor(
-      _for: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    vefxsProxy(overrides?: CallOverrides): Promise<BigNumber>;
-
-    withdraw(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    addReward(
-      _rewardsToken: string,
-      _distributor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    approveRewardDistributor(
-      _rewardsToken: string,
-      _distributor: string,
-      _approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    claimableRewards(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    cvxfxs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "deposit(uint256,bool)"(
-      _amount: BigNumberish,
-      _lock: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "deposit(uint256)"(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    fxs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    fxsDepositor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "getReward(address,address)"(
-      _address: string,
-      _forwardTo: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "getReward(address)"(
-      _address: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    getRewardForDuration(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    lastTimeRewardApplicable(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    notifyRewardAmount(
-      _rewardsToken: string,
-      _reward: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    recoverERC20(
-      _tokenAddress: string,
-      _tokenAmount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    rewardData(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardDistributors(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardPerToken(
-      _rewardsToken: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardRedirect(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardTokenLength(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    rewardTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewards(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    rewardsDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setRewardRedirect(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stake(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stakeAll(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stakeFor(
-      _for: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    userRewardPerTokenPaid(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    vefxsProxy(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    withdraw(
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+
+    "Recovered(address,uint256)": TypedContractEvent<
+      RecoveredEvent.InputTuple,
+      RecoveredEvent.OutputTuple,
+      RecoveredEvent.OutputObject
+    >;
+    Recovered: TypedContractEvent<
+      RecoveredEvent.InputTuple,
+      RecoveredEvent.OutputTuple,
+      RecoveredEvent.OutputObject
+    >;
+
+    "RewardAdded(address,uint256)": TypedContractEvent<
+      RewardAdded_address_uint256_Event.InputTuple,
+      RewardAdded_address_uint256_Event.OutputTuple,
+      RewardAdded_address_uint256_Event.OutputObject
+    >;
+    "RewardAdded(address,address)": TypedContractEvent<
+      RewardAdded_address_address_Event.InputTuple,
+      RewardAdded_address_address_Event.OutputTuple,
+      RewardAdded_address_address_Event.OutputObject
+    >;
+
+    "RewardDistributorApproved(address,address)": TypedContractEvent<
+      RewardDistributorApprovedEvent.InputTuple,
+      RewardDistributorApprovedEvent.OutputTuple,
+      RewardDistributorApprovedEvent.OutputObject
+    >;
+    RewardDistributorApproved: TypedContractEvent<
+      RewardDistributorApprovedEvent.InputTuple,
+      RewardDistributorApprovedEvent.OutputTuple,
+      RewardDistributorApprovedEvent.OutputObject
+    >;
+
+    "RewardPaid(address,address,uint256)": TypedContractEvent<
+      RewardPaidEvent.InputTuple,
+      RewardPaidEvent.OutputTuple,
+      RewardPaidEvent.OutputObject
+    >;
+    RewardPaid: TypedContractEvent<
+      RewardPaidEvent.InputTuple,
+      RewardPaidEvent.OutputTuple,
+      RewardPaidEvent.OutputObject
+    >;
+
+    "RewardRedirected(address,address)": TypedContractEvent<
+      RewardRedirectedEvent.InputTuple,
+      RewardRedirectedEvent.OutputTuple,
+      RewardRedirectedEvent.OutputObject
+    >;
+    RewardRedirected: TypedContractEvent<
+      RewardRedirectedEvent.InputTuple,
+      RewardRedirectedEvent.OutputTuple,
+      RewardRedirectedEvent.OutputObject
+    >;
+
+    "Staked(address,uint256)": TypedContractEvent<
+      StakedEvent.InputTuple,
+      StakedEvent.OutputTuple,
+      StakedEvent.OutputObject
+    >;
+    Staked: TypedContractEvent<
+      StakedEvent.InputTuple,
+      StakedEvent.OutputTuple,
+      StakedEvent.OutputObject
+    >;
+
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+
+    "Withdrawn(address,uint256)": TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
+    Withdrawn: TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
   };
 }

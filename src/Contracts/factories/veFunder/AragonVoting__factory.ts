@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   AragonVoting,
   AragonVotingInterface,
@@ -46,12 +45,12 @@ const _abi = [
 export class AragonVoting__factory {
   static readonly abi = _abi;
   static createInterface(): AragonVotingInterface {
-    return new utils.Interface(_abi) as AragonVotingInterface;
+    return new Interface(_abi) as AragonVotingInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): AragonVoting {
-    return new Contract(address, _abi, signerOrProvider) as AragonVoting;
+    return new Contract(address, _abi, runner) as unknown as AragonVoting;
   }
 }

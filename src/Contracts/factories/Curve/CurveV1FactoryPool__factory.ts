@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   CurveV1FactoryPool,
   CurveV1FactoryPoolInterface,
@@ -40,12 +39,12 @@ const _abi = [
 export class CurveV1FactoryPool__factory {
   static readonly abi = _abi;
   static createInterface(): CurveV1FactoryPoolInterface {
-    return new utils.Interface(_abi) as CurveV1FactoryPoolInterface;
+    return new Interface(_abi) as CurveV1FactoryPoolInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): CurveV1FactoryPool {
-    return new Contract(address, _abi, signerOrProvider) as CurveV1FactoryPool;
+    return new Contract(address, _abi, runner) as unknown as CurveV1FactoryPool;
   }
 }

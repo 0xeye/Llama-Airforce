@@ -3,90 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface UnionVaultUCrvInterface extends utils.Interface {
-  functions: {
-    "CRVETH_CRV_INDEX()": FunctionFragment;
-    "CRVETH_ETH_INDEX()": FunctionFragment;
-    "CRV_TOKEN()": FunctionFragment;
-    "CURVE_CRV_ETH_POOL()": FunctionFragment;
-    "CURVE_CVXCRV_CRV_POOL()": FunctionFragment;
-    "CURVE_CVX_ETH_POOL()": FunctionFragment;
-    "CVXCRV_CRV_INDEX()": FunctionFragment;
-    "CVXCRV_CVXCRV_INDEX()": FunctionFragment;
-    "CVXCRV_STAKING_CONTRACT()": FunctionFragment;
-    "CVXCRV_TOKEN()": FunctionFragment;
-    "CVXETH_CVX_INDEX()": FunctionFragment;
-    "CVXETH_ETH_INDEX()": FunctionFragment;
-    "CVX_TOKEN()": FunctionFragment;
-    "FEE_DENOMINATOR()": FunctionFragment;
-    "MAX_CALL_INCENTIVE()": FunctionFragment;
-    "MAX_PLATFORM_FEE()": FunctionFragment;
-    "MAX_WITHDRAWAL_PENALTY()": FunctionFragment;
-    "allowance(address,address)": FunctionFragment;
-    "approve(address,uint256)": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "balanceOfUnderlying(address)": FunctionFragment;
-    "callIncentive()": FunctionFragment;
-    "decimals()": FunctionFragment;
-    "decreaseAllowance(address,uint256)": FunctionFragment;
-    "deposit(address,uint256)": FunctionFragment;
-    "depositAll(address)": FunctionFragment;
-    "harvest()": FunctionFragment;
-    "increaseAllowance(address,uint256)": FunctionFragment;
-    "name()": FunctionFragment;
-    "outstanding3CrvRewards()": FunctionFragment;
-    "outstandingCrvRewards()": FunctionFragment;
-    "outstandingCvxRewards()": FunctionFragment;
-    "owner()": FunctionFragment;
-    "platform()": FunctionFragment;
-    "platformFee()": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "setApprovals()": FunctionFragment;
-    "setCallIncentive(uint256)": FunctionFragment;
-    "setPlatform(address)": FunctionFragment;
-    "setPlatformFee(uint256)": FunctionFragment;
-    "setWithdrawalPenalty(uint256)": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "totalUnderlying()": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "transfer(address,uint256)": FunctionFragment;
-    "transferFrom(address,address,uint256)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "underlying()": FunctionFragment;
-    "withdraw(address,uint256)": FunctionFragment;
-    "withdrawAll(address)": FunctionFragment;
-    "withdrawAllAs(address,uint8,uint256)": FunctionFragment;
-    "withdrawAllAs(address,uint8)": FunctionFragment;
-    "withdrawAs(address,uint256,uint8)": FunctionFragment;
-    "withdrawAs(address,uint256,uint8,uint256)": FunctionFragment;
-    "withdrawalPenalty()": FunctionFragment;
-  };
-
+export interface UnionVaultUCrvInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "CRVETH_CRV_INDEX"
       | "CRVETH_ETH_INDEX"
       | "CRV_TOKEN"
@@ -143,6 +82,20 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
       | "withdrawAs(address,uint256,uint8,uint256)"
       | "withdrawalPenalty"
   ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "Approval"
+      | "CallerIncentiveUpdated"
+      | "Deposit"
+      | "Harvest"
+      | "OwnershipTransferred"
+      | "PlatformFeeUpdated"
+      | "PlatformUpdated"
+      | "Transfer"
+      | "Withdraw"
+      | "WithdrawalPenaltyUpdated"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "CRVETH_CRV_INDEX",
@@ -208,16 +161,19 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "balanceOfUnderlying",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "callIncentive",
@@ -226,17 +182,20 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "depositAll", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "depositAll",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(functionFragment: "harvest", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "increaseAllowance",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
@@ -269,7 +228,10 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
     functionFragment: "setCallIncentive",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "setPlatform", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setPlatform",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "setPlatformFee",
     values: [BigNumberish]
@@ -289,15 +251,15 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "underlying",
@@ -305,24 +267,27 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "withdrawAll", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "withdrawAll",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "withdrawAllAs(address,uint8,uint256)",
-    values: [string, BigNumberish, BigNumberish]
+    values: [AddressLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawAllAs(address,uint8)",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawAs(address,uint256,uint8)",
-    values: [string, BigNumberish, BigNumberish]
+    values: [AddressLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawAs(address,uint256,uint8,uint256)",
-    values: [string, BigNumberish, BigNumberish, BigNumberish]
+    values: [AddressLike, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawalPenalty",
@@ -501,1234 +466,787 @@ export interface UnionVaultUCrvInterface extends utils.Interface {
     functionFragment: "withdrawalPenalty",
     data: BytesLike
   ): Result;
-
-  events: {
-    "Approval(address,address,uint256)": EventFragment;
-    "CallerIncentiveUpdated(uint256)": EventFragment;
-    "Deposit(address,address,uint256)": EventFragment;
-    "Harvest(address,uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "PlatformFeeUpdated(uint256)": EventFragment;
-    "PlatformUpdated(address)": EventFragment;
-    "Transfer(address,address,uint256)": EventFragment;
-    "Withdraw(address,address,uint256)": EventFragment;
-    "WithdrawalPenaltyUpdated(uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "CallerIncentiveUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Harvest"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PlatformFeeUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PlatformUpdated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "WithdrawalPenaltyUpdated"): EventFragment;
 }
 
-export interface ApprovalEventObject {
-  owner: string;
-  spender: string;
-  value: BigNumber;
+export namespace ApprovalEvent {
+  export type InputTuple = [
+    owner: AddressLike,
+    spender: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [owner: string, spender: string, value: bigint];
+  export interface OutputObject {
+    owner: string;
+    spender: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber],
-  ApprovalEventObject
->;
 
-export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
-
-export interface CallerIncentiveUpdatedEventObject {
-  _incentive: BigNumber;
+export namespace CallerIncentiveUpdatedEvent {
+  export type InputTuple = [_incentive: BigNumberish];
+  export type OutputTuple = [_incentive: bigint];
+  export interface OutputObject {
+    _incentive: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type CallerIncentiveUpdatedEvent = TypedEvent<
-  [BigNumber],
-  CallerIncentiveUpdatedEventObject
->;
 
-export type CallerIncentiveUpdatedEventFilter =
-  TypedEventFilter<CallerIncentiveUpdatedEvent>;
-
-export interface DepositEventObject {
-  _from: string;
-  _to: string;
-  _value: BigNumber;
+export namespace DepositEvent {
+  export type InputTuple = [
+    _from: AddressLike,
+    _to: AddressLike,
+    _value: BigNumberish
+  ];
+  export type OutputTuple = [_from: string, _to: string, _value: bigint];
+  export interface OutputObject {
+    _from: string;
+    _to: string;
+    _value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type DepositEvent = TypedEvent<
-  [string, string, BigNumber],
-  DepositEventObject
->;
 
-export type DepositEventFilter = TypedEventFilter<DepositEvent>;
-
-export interface HarvestEventObject {
-  _caller: string;
-  _value: BigNumber;
+export namespace HarvestEvent {
+  export type InputTuple = [_caller: AddressLike, _value: BigNumberish];
+  export type OutputTuple = [_caller: string, _value: bigint];
+  export interface OutputObject {
+    _caller: string;
+    _value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type HarvestEvent = TypedEvent<[string, BigNumber], HarvestEventObject>;
 
-export type HarvestEventFilter = TypedEventFilter<HarvestEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface PlatformFeeUpdatedEventObject {
-  _fee: BigNumber;
+export namespace PlatformFeeUpdatedEvent {
+  export type InputTuple = [_fee: BigNumberish];
+  export type OutputTuple = [_fee: bigint];
+  export interface OutputObject {
+    _fee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type PlatformFeeUpdatedEvent = TypedEvent<
-  [BigNumber],
-  PlatformFeeUpdatedEventObject
->;
 
-export type PlatformFeeUpdatedEventFilter =
-  TypedEventFilter<PlatformFeeUpdatedEvent>;
-
-export interface PlatformUpdatedEventObject {
-  _platform: string;
+export namespace PlatformUpdatedEvent {
+  export type InputTuple = [_platform: AddressLike];
+  export type OutputTuple = [_platform: string];
+  export interface OutputObject {
+    _platform: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type PlatformUpdatedEvent = TypedEvent<
-  [string],
-  PlatformUpdatedEventObject
->;
 
-export type PlatformUpdatedEventFilter = TypedEventFilter<PlatformUpdatedEvent>;
-
-export interface TransferEventObject {
-  from: string;
-  to: string;
-  value: BigNumber;
+export namespace TransferEvent {
+  export type InputTuple = [
+    from: AddressLike,
+    to: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [from: string, to: string, value: bigint];
+  export interface OutputObject {
+    from: string;
+    to: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber],
-  TransferEventObject
->;
 
-export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export interface WithdrawEventObject {
-  _from: string;
-  _to: string;
-  _value: BigNumber;
+export namespace WithdrawEvent {
+  export type InputTuple = [
+    _from: AddressLike,
+    _to: AddressLike,
+    _value: BigNumberish
+  ];
+  export type OutputTuple = [_from: string, _to: string, _value: bigint];
+  export interface OutputObject {
+    _from: string;
+    _to: string;
+    _value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawEvent = TypedEvent<
-  [string, string, BigNumber],
-  WithdrawEventObject
->;
 
-export type WithdrawEventFilter = TypedEventFilter<WithdrawEvent>;
-
-export interface WithdrawalPenaltyUpdatedEventObject {
-  _penalty: BigNumber;
+export namespace WithdrawalPenaltyUpdatedEvent {
+  export type InputTuple = [_penalty: BigNumberish];
+  export type OutputTuple = [_penalty: bigint];
+  export interface OutputObject {
+    _penalty: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawalPenaltyUpdatedEvent = TypedEvent<
-  [BigNumber],
-  WithdrawalPenaltyUpdatedEventObject
->;
-
-export type WithdrawalPenaltyUpdatedEventFilter =
-  TypedEventFilter<WithdrawalPenaltyUpdatedEvent>;
 
 export interface UnionVaultUCrv extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): UnionVaultUCrv;
+  waitForDeployment(): Promise<this>;
 
   interface: UnionVaultUCrvInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    CRV_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_CRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CRVETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CRV_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<[string]>;
+  CURVE_CRV_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_CVXCRV_CRV_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CURVE_CVX_ETH_POOL: TypedContractMethod<[], [string], "view">;
 
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<[string]>;
+  CVXCRV_CRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXCRV_CVXCRV_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVXCRV_STAKING_CONTRACT: TypedContractMethod<[], [string], "view">;
 
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVXCRV_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    CVX_TOKEN(overrides?: CallOverrides): Promise<[string]>;
+  CVXETH_CVX_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVXETH_ETH_INDEX: TypedContractMethod<[], [bigint], "view">;
 
-    MAX_CALL_INCENTIVE(overrides?: CallOverrides): Promise<[BigNumber]>;
+  CVX_TOKEN: TypedContractMethod<[], [string], "view">;
 
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<[BigNumber]>;
+  FEE_DENOMINATOR: TypedContractMethod<[], [bigint], "view">;
 
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<[BigNumber]>;
+  MAX_CALL_INCENTIVE: TypedContractMethod<[], [bigint], "view">;
 
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  MAX_PLATFORM_FEE: TypedContractMethod<[], [bigint], "view">;
 
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  MAX_WITHDRAWAL_PENALTY: TypedContractMethod<[], [bigint], "view">;
 
-    balanceOf(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  allowance: TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    balanceOfUnderlying(
-      user: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { amount: BigNumber }>;
+  approve: TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    callIncentive(overrides?: CallOverrides): Promise<[BigNumber]>;
+  balanceOf: TypedContractMethod<[account: AddressLike], [bigint], "view">;
 
-    decimals(overrides?: CallOverrides): Promise<[number]>;
+  balanceOfUnderlying: TypedContractMethod<
+    [user: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  callIncentive: TypedContractMethod<[], [bigint], "view">;
 
-    deposit(
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  decimals: TypedContractMethod<[], [bigint], "view">;
 
-    depositAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  decreaseAllowance: TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    harvest(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  deposit: TypedContractMethod<
+    [_to: AddressLike, _amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  depositAll: TypedContractMethod<[_to: AddressLike], [bigint], "nonpayable">;
 
-    name(overrides?: CallOverrides): Promise<[string]>;
-
-    outstanding3CrvRewards(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { total: BigNumber }>;
-
-    outstandingCrvRewards(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { total: BigNumber }>;
-
-    outstandingCvxRewards(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { total: BigNumber }>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    platform(overrides?: CallOverrides): Promise<[string]>;
-
-    platformFee(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setCallIncentive(
-      _incentive: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  harvest: TypedContractMethod<[], [void], "nonpayable">;
 
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  increaseAllowance: TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    setPlatformFee(
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  name: TypedContractMethod<[], [string], "view">;
 
-    setWithdrawalPenalty(
-      _penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  outstanding3CrvRewards: TypedContractMethod<[], [bigint], "view">;
 
-    symbol(overrides?: CallOverrides): Promise<[string]>;
+  outstandingCrvRewards: TypedContractMethod<[], [bigint], "view">;
 
-    totalUnderlying(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { total: BigNumber }>;
+  outstandingCvxRewards: TypedContractMethod<[], [bigint], "view">;
 
-    totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
+  owner: TypedContractMethod<[], [string], "view">;
 
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  platform: TypedContractMethod<[], [string], "view">;
 
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  platformFee: TypedContractMethod<[], [bigint], "view">;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-    underlying(overrides?: CallOverrides): Promise<[string]>;
+  setApprovals: TypedContractMethod<[], [void], "nonpayable">;
 
-    withdraw(
-      _to: string,
-      _shares: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setCallIncentive: TypedContractMethod<
+    [_incentive: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    withdrawAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setPlatform: TypedContractMethod<
+    [_platform: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    "withdrawAllAs(address,uint8,uint256)"(
-      _to: string,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setPlatformFee: TypedContractMethod<
+    [_fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    "withdrawAllAs(address,uint8)"(
-      _to: string,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  setWithdrawalPenalty: TypedContractMethod<
+    [_penalty: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    "withdrawAs(address,uint256,uint8)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  symbol: TypedContractMethod<[], [string], "view">;
 
-    "withdrawAs(address,uint256,uint8,uint256)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  totalUnderlying: TypedContractMethod<[], [bigint], "view">;
 
-    withdrawalPenalty(overrides?: CallOverrides): Promise<[BigNumber]>;
-  };
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
 
-  CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
+  transfer: TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-  CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
+  transferFrom: TypedContractMethod<
+    [sender: AddressLike, recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-  CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-  CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
+  underlying: TypedContractMethod<[], [string], "view">;
 
-  CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<string>;
+  withdraw: TypedContractMethod<
+    [_to: AddressLike, _shares: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-  CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
+  withdrawAll: TypedContractMethod<[_to: AddressLike], [bigint], "nonpayable">;
 
-  CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
+  "withdrawAllAs(address,uint8,uint256)": TypedContractMethod<
+    [_to: AddressLike, option: BigNumberish, minAmountOut: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-  CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
+  "withdrawAllAs(address,uint8)": TypedContractMethod<
+    [_to: AddressLike, option: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-  CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<string>;
+  "withdrawAs(address,uint256,uint8)": TypedContractMethod<
+    [_to: AddressLike, _shares: BigNumberish, option: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-  CVXCRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-  CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-  FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MAX_CALL_INCENTIVE(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-  allowance(
-    owner: string,
-    spender: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  approve(
-    spender: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  balanceOfUnderlying(
-    user: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  callIncentive(overrides?: CallOverrides): Promise<BigNumber>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
-
-  decreaseAllowance(
-    spender: string,
-    subtractedValue: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  deposit(
-    _to: string,
-    _amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  depositAll(
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  harvest(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  increaseAllowance(
-    spender: string,
-    addedValue: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  outstanding3CrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-  outstandingCrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-  outstandingCvxRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  platform(overrides?: CallOverrides): Promise<string>;
-
-  platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setApprovals(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setCallIncentive(
-    _incentive: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setPlatform(
-    _platform: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setPlatformFee(
-    _fee: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setWithdrawalPenalty(
-    _penalty: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  symbol(overrides?: CallOverrides): Promise<string>;
-
-  totalUnderlying(overrides?: CallOverrides): Promise<BigNumber>;
-
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  transfer(
-    recipient: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferFrom(
-    sender: string,
-    recipient: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  underlying(overrides?: CallOverrides): Promise<string>;
-
-  withdraw(
-    _to: string,
-    _shares: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdrawAll(
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "withdrawAllAs(address,uint8,uint256)"(
-    _to: string,
-    option: BigNumberish,
-    minAmountOut: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "withdrawAllAs(address,uint8)"(
-    _to: string,
-    option: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "withdrawAs(address,uint256,uint8)"(
-    _to: string,
-    _shares: BigNumberish,
-    option: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "withdrawAs(address,uint256,uint8,uint256)"(
-    _to: string,
-    _shares: BigNumberish,
-    option: BigNumberish,
-    minAmountOut: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-
-  callStatic: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<string>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<string>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<string>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_CALL_INCENTIVE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    balanceOfUnderlying(
-      user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    callIncentive(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    deposit(
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    depositAll(_to: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    harvest(overrides?: CallOverrides): Promise<void>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    outstanding3CrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    outstandingCrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    outstandingCvxRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    platform(overrides?: CallOverrides): Promise<string>;
-
-    platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    setApprovals(overrides?: CallOverrides): Promise<void>;
-
-    setCallIncentive(
-      _incentive: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setPlatform(_platform: string, overrides?: CallOverrides): Promise<void>;
-
-    setPlatformFee(
-      _fee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setWithdrawalPenalty(
-      _penalty: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    symbol(overrides?: CallOverrides): Promise<string>;
-
-    totalUnderlying(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    underlying(overrides?: CallOverrides): Promise<string>;
-
-    withdraw(
-      _to: string,
-      _shares: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    withdrawAll(_to: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    "withdrawAllAs(address,uint8,uint256)"(
-      _to: string,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "withdrawAllAs(address,uint8)"(
-      _to: string,
-      option: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "withdrawAs(address,uint256,uint8)"(
-      _to: string,
+  "withdrawAs(address,uint256,uint8,uint256)": TypedContractMethod<
+    [
+      _to: AddressLike,
       _shares: BigNumberish,
       option: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      minAmountOut: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    "withdrawAs(address,uint256,uint8,uint256)"(
-      _to: string,
+  withdrawalPenalty: TypedContractMethod<[], [bigint], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "CRVETH_CRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRVETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CRV_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CRV_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVXCRV_CRV_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CURVE_CVX_ETH_POOL"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_CRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_CVXCRV_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_STAKING_CONTRACT"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXCRV_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_CVX_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVXETH_ETH_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "CVX_TOKEN"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "FEE_DENOMINATOR"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_CALL_INCENTIVE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_PLATFORM_FEE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_WITHDRAWAL_PENALTY"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "allowance"
+  ): TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [spender: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[account: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "balanceOfUnderlying"
+  ): TypedContractMethod<[user: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "callIncentive"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "decimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "decreaseAllowance"
+  ): TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [_to: AddressLike, _amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "depositAll"
+  ): TypedContractMethod<[_to: AddressLike], [bigint], "nonpayable">;
+  getFunction(
+    nameOrSignature: "harvest"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "increaseAllowance"
+  ): TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "outstanding3CrvRewards"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "outstandingCrvRewards"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "outstandingCvxRewards"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "platform"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "platformFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setApprovals"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setCallIncentive"
+  ): TypedContractMethod<[_incentive: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setPlatform"
+  ): TypedContractMethod<[_platform: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setPlatformFee"
+  ): TypedContractMethod<[_fee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setWithdrawalPenalty"
+  ): TypedContractMethod<[_penalty: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "totalUnderlying"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [sender: AddressLike, recipient: AddressLike, amount: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "underlying"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<
+    [_to: AddressLike, _shares: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawAll"
+  ): TypedContractMethod<[_to: AddressLike], [bigint], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdrawAllAs(address,uint8,uint256)"
+  ): TypedContractMethod<
+    [_to: AddressLike, option: BigNumberish, minAmountOut: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawAllAs(address,uint8)"
+  ): TypedContractMethod<
+    [_to: AddressLike, option: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawAs(address,uint256,uint8)"
+  ): TypedContractMethod<
+    [_to: AddressLike, _shares: BigNumberish, option: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawAs(address,uint256,uint8,uint256)"
+  ): TypedContractMethod<
+    [
+      _to: AddressLike,
       _shares: BigNumberish,
       option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      minAmountOut: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawalPenalty"
+  ): TypedContractMethod<[], [bigint], "view">;
 
-    withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-  };
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "CallerIncentiveUpdated"
+  ): TypedContractEvent<
+    CallerIncentiveUpdatedEvent.InputTuple,
+    CallerIncentiveUpdatedEvent.OutputTuple,
+    CallerIncentiveUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Deposit"
+  ): TypedContractEvent<
+    DepositEvent.InputTuple,
+    DepositEvent.OutputTuple,
+    DepositEvent.OutputObject
+  >;
+  getEvent(
+    key: "Harvest"
+  ): TypedContractEvent<
+    HarvestEvent.InputTuple,
+    HarvestEvent.OutputTuple,
+    HarvestEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "PlatformFeeUpdated"
+  ): TypedContractEvent<
+    PlatformFeeUpdatedEvent.InputTuple,
+    PlatformFeeUpdatedEvent.OutputTuple,
+    PlatformFeeUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "PlatformUpdated"
+  ): TypedContractEvent<
+    PlatformUpdatedEvent.InputTuple,
+    PlatformUpdatedEvent.OutputTuple,
+    PlatformUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+  getEvent(
+    key: "Withdraw"
+  ): TypedContractEvent<
+    WithdrawEvent.InputTuple,
+    WithdrawEvent.OutputTuple,
+    WithdrawEvent.OutputObject
+  >;
+  getEvent(
+    key: "WithdrawalPenaltyUpdated"
+  ): TypedContractEvent<
+    WithdrawalPenaltyUpdatedEvent.InputTuple,
+    WithdrawalPenaltyUpdatedEvent.OutputTuple,
+    WithdrawalPenaltyUpdatedEvent.OutputObject
+  >;
 
   filters: {
-    "Approval(address,address,uint256)"(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-    Approval(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-
-    "CallerIncentiveUpdated(uint256)"(
-      _incentive?: null
-    ): CallerIncentiveUpdatedEventFilter;
-    CallerIncentiveUpdated(
-      _incentive?: null
-    ): CallerIncentiveUpdatedEventFilter;
-
-    "Deposit(address,address,uint256)"(
-      _from?: string | null,
-      _to?: string | null,
-      _value?: null
-    ): DepositEventFilter;
-    Deposit(
-      _from?: string | null,
-      _to?: string | null,
-      _value?: null
-    ): DepositEventFilter;
-
-    "Harvest(address,uint256)"(
-      _caller?: string | null,
-      _value?: null
-    ): HarvestEventFilter;
-    Harvest(_caller?: string | null, _value?: null): HarvestEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-
-    "PlatformFeeUpdated(uint256)"(_fee?: null): PlatformFeeUpdatedEventFilter;
-    PlatformFeeUpdated(_fee?: null): PlatformFeeUpdatedEventFilter;
-
-    "PlatformUpdated(address)"(
-      _platform?: string | null
-    ): PlatformUpdatedEventFilter;
-    PlatformUpdated(_platform?: string | null): PlatformUpdatedEventFilter;
-
-    "Transfer(address,address,uint256)"(
-      from?: string | null,
-      to?: string | null,
-      value?: null
-    ): TransferEventFilter;
-    Transfer(
-      from?: string | null,
-      to?: string | null,
-      value?: null
-    ): TransferEventFilter;
-
-    "Withdraw(address,address,uint256)"(
-      _from?: string | null,
-      _to?: string | null,
-      _value?: null
-    ): WithdrawEventFilter;
-    Withdraw(
-      _from?: string | null,
-      _to?: string | null,
-      _value?: null
-    ): WithdrawEventFilter;
-
-    "WithdrawalPenaltyUpdated(uint256)"(
-      _penalty?: null
-    ): WithdrawalPenaltyUpdatedEventFilter;
-    WithdrawalPenaltyUpdated(
-      _penalty?: null
-    ): WithdrawalPenaltyUpdatedEventFilter;
-  };
-
-  estimateGas: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CRV_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVXCRV_CRV_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CURVE_CVX_ETH_POOL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_CVXCRV_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_STAKING_CONTRACT(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_CALL_INCENTIVE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_WITHDRAWAL_PENALTY(overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    balanceOfUnderlying(
-      user: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    callIncentive(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    deposit(
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    depositAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    harvest(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    outstanding3CrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    outstandingCrvRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    outstandingCvxRewards(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    platform(overrides?: CallOverrides): Promise<BigNumber>;
-
-    platformFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setApprovals(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    setCallIncentive(
-      _incentive: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setPlatformFee(
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setWithdrawalPenalty(
-      _penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalUnderlying(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    underlying(overrides?: CallOverrides): Promise<BigNumber>;
-
-    withdraw(
-      _to: string,
-      _shares: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdrawAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "withdrawAllAs(address,uint8,uint256)"(
-      _to: string,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "withdrawAllAs(address,uint8)"(
-      _to: string,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "withdrawAs(address,uint256,uint8)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "withdrawAs(address,uint256,uint8,uint256)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    CRVETH_CRV_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRVETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CRV_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CURVE_CRV_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVXCRV_CRV_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CURVE_CVX_ETH_POOL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_CRV_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXCRV_CVXCRV_INDEX(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_STAKING_CONTRACT(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    CVXCRV_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXETH_CVX_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVXETH_ETH_INDEX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    CVX_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_CALL_INCENTIVE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    MAX_PLATFORM_FEE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_WITHDRAWAL_PENALTY(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    allowance(
-      owner: string,
-      spender: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    approve(
-      spender: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    balanceOfUnderlying(
-      user: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    callIncentive(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    decreaseAllowance(
-      spender: string,
-      subtractedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    deposit(
-      _to: string,
-      _amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    depositAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    harvest(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    increaseAllowance(
-      spender: string,
-      addedValue: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    outstanding3CrvRewards(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    outstandingCrvRewards(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    outstandingCvxRewards(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    platform(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    platformFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setApprovals(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setCallIncentive(
-      _incentive: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setPlatform(
-      _platform: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setPlatformFee(
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setWithdrawalPenalty(
-      _penalty: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalUnderlying(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferFrom(
-      sender: string,
-      recipient: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    underlying(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    withdraw(
-      _to: string,
-      _shares: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawAll(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawAllAs(address,uint8,uint256)"(
-      _to: string,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawAllAs(address,uint8)"(
-      _to: string,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawAs(address,uint256,uint8)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawAs(address,uint256,uint8,uint256)"(
-      _to: string,
-      _shares: BigNumberish,
-      option: BigNumberish,
-      minAmountOut: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawalPenalty(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+
+    "CallerIncentiveUpdated(uint256)": TypedContractEvent<
+      CallerIncentiveUpdatedEvent.InputTuple,
+      CallerIncentiveUpdatedEvent.OutputTuple,
+      CallerIncentiveUpdatedEvent.OutputObject
+    >;
+    CallerIncentiveUpdated: TypedContractEvent<
+      CallerIncentiveUpdatedEvent.InputTuple,
+      CallerIncentiveUpdatedEvent.OutputTuple,
+      CallerIncentiveUpdatedEvent.OutputObject
+    >;
+
+    "Deposit(address,address,uint256)": TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+    Deposit: TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+
+    "Harvest(address,uint256)": TypedContractEvent<
+      HarvestEvent.InputTuple,
+      HarvestEvent.OutputTuple,
+      HarvestEvent.OutputObject
+    >;
+    Harvest: TypedContractEvent<
+      HarvestEvent.InputTuple,
+      HarvestEvent.OutputTuple,
+      HarvestEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "PlatformFeeUpdated(uint256)": TypedContractEvent<
+      PlatformFeeUpdatedEvent.InputTuple,
+      PlatformFeeUpdatedEvent.OutputTuple,
+      PlatformFeeUpdatedEvent.OutputObject
+    >;
+    PlatformFeeUpdated: TypedContractEvent<
+      PlatformFeeUpdatedEvent.InputTuple,
+      PlatformFeeUpdatedEvent.OutputTuple,
+      PlatformFeeUpdatedEvent.OutputObject
+    >;
+
+    "PlatformUpdated(address)": TypedContractEvent<
+      PlatformUpdatedEvent.InputTuple,
+      PlatformUpdatedEvent.OutputTuple,
+      PlatformUpdatedEvent.OutputObject
+    >;
+    PlatformUpdated: TypedContractEvent<
+      PlatformUpdatedEvent.InputTuple,
+      PlatformUpdatedEvent.OutputTuple,
+      PlatformUpdatedEvent.OutputObject
+    >;
+
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+
+    "Withdraw(address,address,uint256)": TypedContractEvent<
+      WithdrawEvent.InputTuple,
+      WithdrawEvent.OutputTuple,
+      WithdrawEvent.OutputObject
+    >;
+    Withdraw: TypedContractEvent<
+      WithdrawEvent.InputTuple,
+      WithdrawEvent.OutputTuple,
+      WithdrawEvent.OutputObject
+    >;
+
+    "WithdrawalPenaltyUpdated(uint256)": TypedContractEvent<
+      WithdrawalPenaltyUpdatedEvent.InputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputObject
+    >;
+    WithdrawalPenaltyUpdated: TypedContractEvent<
+      WithdrawalPenaltyUpdatedEvent.InputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputTuple,
+      WithdrawalPenaltyUpdatedEvent.OutputObject
+    >;
   };
 }

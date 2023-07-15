@@ -3,74 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PayableOverrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface TheLlamasInterface extends utils.Interface {
-  functions: {
-    "supportsInterface(bytes4)": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "ownerOf(uint256)": FunctionFragment;
-    "getApproved(uint256)": FunctionFragment;
-    "isApprovedForAll(address,address)": FunctionFragment;
-    "transferFrom(address,address,uint256)": FunctionFragment;
-    "safeTransferFrom(address,address,uint256)": FunctionFragment;
-    "safeTransferFrom(address,address,uint256,bytes)": FunctionFragment;
-    "approve(address,uint256)": FunctionFragment;
-    "setApprovalForAll(address,bool)": FunctionFragment;
-    "allowlistMint(uint256,uint256,bytes)": FunctionFragment;
-    "mint()": FunctionFragment;
-    "tokenURI(uint256)": FunctionFragment;
-    "contractURI()": FunctionFragment;
-    "set_minter(address)": FunctionFragment;
-    "set_al_signer(address)": FunctionFragment;
-    "set_base_uri(string)": FunctionFragment;
-    "set_contract_uri(string)": FunctionFragment;
-    "set_owner(address)": FunctionFragment;
-    "set_revealed(bool)": FunctionFragment;
-    "withdraw()": FunctionFragment;
-    "admin_withdraw_erc20(address,address,uint256)": FunctionFragment;
-    "start_al_mint()": FunctionFragment;
-    "stop_al_mint()": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "tokenByIndex(uint256)": FunctionFragment;
-    "tokenOfOwnerByIndex(address,uint256)": FunctionFragment;
-    "tokensForOwner(address)": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "name()": FunctionFragment;
-    "owner()": FunctionFragment;
-    "base_uri()": FunctionFragment;
-    "revealed()": FunctionFragment;
-    "default_uri()": FunctionFragment;
-    "al_mint_started()": FunctionFragment;
-    "al_signer()": FunctionFragment;
-    "minter()": FunctionFragment;
-    "al_mint_amount(address)": FunctionFragment;
-  };
-
+export interface TheLlamasInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "supportsInterface"
       | "balanceOf"
       | "ownerOf"
@@ -111,11 +66,18 @@ export interface TheLlamasInterface extends utils.Interface {
       | "al_mint_amount"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic: "Transfer" | "Approval" | "ApprovalForAll"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
@@ -126,27 +88,27 @@ export interface TheLlamasInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "safeTransferFrom(address,address,uint256)",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "safeTransferFrom(address,address,uint256,bytes)",
-    values: [string, string, BigNumberish, BytesLike]
+    values: [AddressLike, AddressLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setApprovalForAll",
-    values: [string, boolean]
+    values: [AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "allowlistMint",
@@ -161,10 +123,13 @@ export interface TheLlamasInterface extends utils.Interface {
     functionFragment: "contractURI",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "set_minter", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "set_minter",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "set_al_signer",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "set_base_uri",
@@ -174,7 +139,10 @@ export interface TheLlamasInterface extends utils.Interface {
     functionFragment: "set_contract_uri",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "set_owner", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "set_owner",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "set_revealed",
     values: [boolean]
@@ -182,7 +150,7 @@ export interface TheLlamasInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "admin_withdraw_erc20",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "start_al_mint",
@@ -202,11 +170,11 @@ export interface TheLlamasInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "tokenOfOwnerByIndex",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "tokensForOwner",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
@@ -225,7 +193,7 @@ export interface TheLlamasInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "minter", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "al_mint_amount",
-    values: [string]
+    values: [AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -335,896 +303,456 @@ export interface TheLlamasInterface extends utils.Interface {
     functionFragment: "al_mint_amount",
     data: BytesLike
   ): Result;
-
-  events: {
-    "Transfer(address,address,uint256)": EventFragment;
-    "Approval(address,address,uint256)": EventFragment;
-    "ApprovalForAll(address,address,bool)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
 }
 
-export interface TransferEventObject {
-  _from: string;
-  _to: string;
-  _tokenId: BigNumber;
+export namespace TransferEvent {
+  export type InputTuple = [
+    _from: AddressLike,
+    _to: AddressLike,
+    _tokenId: BigNumberish
+  ];
+  export type OutputTuple = [_from: string, _to: string, _tokenId: bigint];
+  export interface OutputObject {
+    _from: string;
+    _to: string;
+    _tokenId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber],
-  TransferEventObject
->;
 
-export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export interface ApprovalEventObject {
-  _owner: string;
-  _approved: string;
-  _tokenId: BigNumber;
+export namespace ApprovalEvent {
+  export type InputTuple = [
+    _owner: AddressLike,
+    _approved: AddressLike,
+    _tokenId: BigNumberish
+  ];
+  export type OutputTuple = [
+    _owner: string,
+    _approved: string,
+    _tokenId: bigint
+  ];
+  export interface OutputObject {
+    _owner: string;
+    _approved: string;
+    _tokenId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber],
-  ApprovalEventObject
->;
 
-export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
-
-export interface ApprovalForAllEventObject {
-  _owner: string;
-  _operator: string;
-  _approved: boolean;
+export namespace ApprovalForAllEvent {
+  export type InputTuple = [
+    _owner: AddressLike,
+    _operator: AddressLike,
+    _approved: boolean
+  ];
+  export type OutputTuple = [
+    _owner: string,
+    _operator: string,
+    _approved: boolean
+  ];
+  export interface OutputObject {
+    _owner: string;
+    _operator: string;
+    _approved: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalForAllEvent = TypedEvent<
-  [string, string, boolean],
-  ApprovalForAllEventObject
->;
-
-export type ApprovalForAllEventFilter = TypedEventFilter<ApprovalForAllEvent>;
 
 export interface TheLlamas extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): TheLlamas;
+  waitForDeployment(): Promise<this>;
 
   interface: TheLlamasInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    supportsInterface(
-      interface_id: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    ownerOf(
+  supportsInterface: TypedContractMethod<
+    [interface_id: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  balanceOf: TypedContractMethod<[owner: AddressLike], [bigint], "view">;
+
+  ownerOf: TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+
+  getApproved: TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+
+  isApprovedForAll: TypedContractMethod<
+    [owner: AddressLike, operator: AddressLike],
+    [boolean],
+    "view"
+  >;
+
+  transferFrom: TypedContractMethod<
+    [from_addr: AddressLike, to_addr: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "safeTransferFrom(address,address,uint256)": TypedContractMethod<
+    [from_addr: AddressLike, to_addr: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "safeTransferFrom(address,address,uint256,bytes)": TypedContractMethod<
+    [
+      from_addr: AddressLike,
+      to_addr: AddressLike,
       token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+      data: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    getApproved(
+  approve: TypedContractMethod<
+    [approved: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setApprovalForAll: TypedContractMethod<
+    [operator: AddressLike, approved: boolean],
+    [void],
+    "nonpayable"
+  >;
+
+  allowlistMint: TypedContractMethod<
+    [mint_amount: BigNumberish, approved_amount: BigNumberish, sig: BytesLike],
+    [void],
+    "payable"
+  >;
+
+  mint: TypedContractMethod<[], [bigint], "nonpayable">;
+
+  tokenURI: TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+
+  contractURI: TypedContractMethod<[], [string], "view">;
+
+  set_minter: TypedContractMethod<[minter: AddressLike], [void], "nonpayable">;
+
+  set_al_signer: TypedContractMethod<
+    [al_signer: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  set_base_uri: TypedContractMethod<[base_uri: string], [void], "nonpayable">;
+
+  set_contract_uri: TypedContractMethod<
+    [new_uri: string],
+    [void],
+    "nonpayable"
+  >;
+
+  set_owner: TypedContractMethod<[new_addr: AddressLike], [void], "nonpayable">;
+
+  set_revealed: TypedContractMethod<[flag: boolean], [void], "nonpayable">;
+
+  withdraw: TypedContractMethod<[], [void], "nonpayable">;
+
+  admin_withdraw_erc20: TypedContractMethod<
+    [coin: AddressLike, target: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  start_al_mint: TypedContractMethod<[], [void], "nonpayable">;
+
+  stop_al_mint: TypedContractMethod<[], [void], "nonpayable">;
+
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
+
+  tokenByIndex: TypedContractMethod<[_index: BigNumberish], [bigint], "view">;
+
+  tokenOfOwnerByIndex: TypedContractMethod<
+    [owner: AddressLike, index: BigNumberish],
+    [bigint],
+    "view"
+  >;
+
+  tokensForOwner: TypedContractMethod<[owner: AddressLike], [bigint[]], "view">;
+
+  symbol: TypedContractMethod<[], [string], "view">;
+
+  name: TypedContractMethod<[], [string], "view">;
+
+  owner: TypedContractMethod<[], [string], "view">;
+
+  base_uri: TypedContractMethod<[], [string], "view">;
+
+  revealed: TypedContractMethod<[], [boolean], "view">;
+
+  default_uri: TypedContractMethod<[], [string], "view">;
+
+  al_mint_started: TypedContractMethod<[], [boolean], "view">;
+
+  al_signer: TypedContractMethod<[], [string], "view">;
+
+  minter: TypedContractMethod<[], [string], "view">;
+
+  al_mint_amount: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "supportsInterface"
+  ): TypedContractMethod<[interface_id: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[owner: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ownerOf"
+  ): TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "getApproved"
+  ): TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "isApprovedForAll"
+  ): TypedContractMethod<
+    [owner: AddressLike, operator: AddressLike],
+    [boolean],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [from_addr: AddressLike, to_addr: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "safeTransferFrom(address,address,uint256)"
+  ): TypedContractMethod<
+    [from_addr: AddressLike, to_addr: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "safeTransferFrom(address,address,uint256,bytes)"
+  ): TypedContractMethod<
+    [
+      from_addr: AddressLike,
+      to_addr: AddressLike,
       token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    isApprovedForAll(
-      owner: string,
-      operator: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    transferFrom(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "safeTransferFrom(address,address,uint256)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    "safeTransferFrom(address,address,uint256,bytes)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    approve(
-      approved: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setApprovalForAll(
-      operator: string,
-      approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    allowlistMint(
-      mint_amount: BigNumberish,
-      approved_amount: BigNumberish,
-      sig: BytesLike,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    tokenURI(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    contractURI(overrides?: CallOverrides): Promise<[string]>;
-
-    set_minter(
-      minter: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    set_al_signer(
-      al_signer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    set_base_uri(
-      base_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    set_contract_uri(
-      new_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    set_owner(
-      new_addr: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    set_revealed(
-      flag: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    withdraw(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    admin_withdraw_erc20(
-      coin: string,
-      target: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    start_al_mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    stop_al_mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    tokenByIndex(
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    tokenOfOwnerByIndex(
-      owner: string,
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    tokensForOwner(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber[]]>;
-
-    symbol(overrides?: CallOverrides): Promise<[string]>;
-
-    name(overrides?: CallOverrides): Promise<[string]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    base_uri(overrides?: CallOverrides): Promise<[string]>;
-
-    revealed(overrides?: CallOverrides): Promise<[boolean]>;
-
-    default_uri(overrides?: CallOverrides): Promise<[string]>;
-
-    al_mint_started(overrides?: CallOverrides): Promise<[boolean]>;
-
-    al_signer(overrides?: CallOverrides): Promise<[string]>;
-
-    minter(overrides?: CallOverrides): Promise<[string]>;
-
-    al_mint_amount(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-  };
-
-  supportsInterface(
-    interface_id: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  ownerOf(token_id: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  getApproved(
-    token_id: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  isApprovedForAll(
-    owner: string,
-    operator: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  transferFrom(
-    from_addr: string,
-    to_addr: string,
-    token_id: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "safeTransferFrom(address,address,uint256)"(
-    from_addr: string,
-    to_addr: string,
-    token_id: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "safeTransferFrom(address,address,uint256,bytes)"(
-    from_addr: string,
-    to_addr: string,
-    token_id: BigNumberish,
-    data: BytesLike,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  approve(
-    approved: string,
-    token_id: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setApprovalForAll(
-    operator: string,
-    approved: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  allowlistMint(
-    mint_amount: BigNumberish,
-    approved_amount: BigNumberish,
-    sig: BytesLike,
-    overrides?: PayableOverrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  mint(overrides?: Overrides & { from?: string }): Promise<ContractTransaction>;
-
-  tokenURI(token_id: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  contractURI(overrides?: CallOverrides): Promise<string>;
-
-  set_minter(
-    minter: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_al_signer(
-    al_signer: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_base_uri(
-    base_uri: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_contract_uri(
-    new_uri: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_owner(
-    new_addr: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_revealed(
-    flag: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdraw(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  admin_withdraw_erc20(
-    coin: string,
-    target: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  start_al_mint(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  stop_al_mint(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  tokenByIndex(
-    _index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  tokenOfOwnerByIndex(
-    owner: string,
-    index: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  tokensForOwner(
-    owner: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber[]>;
-
-  symbol(overrides?: CallOverrides): Promise<string>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  base_uri(overrides?: CallOverrides): Promise<string>;
-
-  revealed(overrides?: CallOverrides): Promise<boolean>;
-
-  default_uri(overrides?: CallOverrides): Promise<string>;
-
-  al_mint_started(overrides?: CallOverrides): Promise<boolean>;
-
-  al_signer(overrides?: CallOverrides): Promise<string>;
-
-  minter(overrides?: CallOverrides): Promise<string>;
-
-  al_mint_amount(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  callStatic: {
-    supportsInterface(
-      interface_id: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    ownerOf(token_id: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-    getApproved(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    isApprovedForAll(
-      owner: string,
-      operator: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferFrom(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "safeTransferFrom(address,address,uint256)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "safeTransferFrom(address,address,uint256,bytes)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    approve(
-      approved: string,
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setApprovalForAll(
-      operator: string,
-      approved: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    allowlistMint(
-      mint_amount: BigNumberish,
-      approved_amount: BigNumberish,
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    mint(overrides?: CallOverrides): Promise<BigNumber>;
-
-    tokenURI(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    contractURI(overrides?: CallOverrides): Promise<string>;
-
-    set_minter(minter: string, overrides?: CallOverrides): Promise<void>;
-
-    set_al_signer(al_signer: string, overrides?: CallOverrides): Promise<void>;
-
-    set_base_uri(base_uri: string, overrides?: CallOverrides): Promise<void>;
-
-    set_contract_uri(new_uri: string, overrides?: CallOverrides): Promise<void>;
-
-    set_owner(new_addr: string, overrides?: CallOverrides): Promise<void>;
-
-    set_revealed(flag: boolean, overrides?: CallOverrides): Promise<void>;
-
-    withdraw(overrides?: CallOverrides): Promise<void>;
-
-    admin_withdraw_erc20(
-      coin: string,
-      target: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    start_al_mint(overrides?: CallOverrides): Promise<void>;
-
-    stop_al_mint(overrides?: CallOverrides): Promise<void>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    tokenByIndex(
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    tokenOfOwnerByIndex(
-      owner: string,
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    tokensForOwner(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber[]>;
-
-    symbol(overrides?: CallOverrides): Promise<string>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    base_uri(overrides?: CallOverrides): Promise<string>;
-
-    revealed(overrides?: CallOverrides): Promise<boolean>;
-
-    default_uri(overrides?: CallOverrides): Promise<string>;
-
-    al_mint_started(overrides?: CallOverrides): Promise<boolean>;
-
-    al_signer(overrides?: CallOverrides): Promise<string>;
-
-    minter(overrides?: CallOverrides): Promise<string>;
-
-    al_mint_amount(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-  };
+      data: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [approved: AddressLike, token_id: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setApprovalForAll"
+  ): TypedContractMethod<
+    [operator: AddressLike, approved: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "allowlistMint"
+  ): TypedContractMethod<
+    [mint_amount: BigNumberish, approved_amount: BigNumberish, sig: BytesLike],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "mint"
+  ): TypedContractMethod<[], [bigint], "nonpayable">;
+  getFunction(
+    nameOrSignature: "tokenURI"
+  ): TypedContractMethod<[token_id: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "contractURI"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "set_minter"
+  ): TypedContractMethod<[minter: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_al_signer"
+  ): TypedContractMethod<[al_signer: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_base_uri"
+  ): TypedContractMethod<[base_uri: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_contract_uri"
+  ): TypedContractMethod<[new_uri: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_owner"
+  ): TypedContractMethod<[new_addr: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_revealed"
+  ): TypedContractMethod<[flag: boolean], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "admin_withdraw_erc20"
+  ): TypedContractMethod<
+    [coin: AddressLike, target: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "start_al_mint"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "stop_al_mint"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "tokenByIndex"
+  ): TypedContractMethod<[_index: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "tokenOfOwnerByIndex"
+  ): TypedContractMethod<
+    [owner: AddressLike, index: BigNumberish],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "tokensForOwner"
+  ): TypedContractMethod<[owner: AddressLike], [bigint[]], "view">;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "base_uri"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "revealed"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "default_uri"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "al_mint_started"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "al_signer"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "minter"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "al_mint_amount"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "ApprovalForAll"
+  ): TypedContractEvent<
+    ApprovalForAllEvent.InputTuple,
+    ApprovalForAllEvent.OutputTuple,
+    ApprovalForAllEvent.OutputObject
+  >;
 
   filters: {
-    "Transfer(address,address,uint256)"(
-      _from?: string | null,
-      _to?: string | null,
-      _tokenId?: BigNumberish | null
-    ): TransferEventFilter;
-    Transfer(
-      _from?: string | null,
-      _to?: string | null,
-      _tokenId?: BigNumberish | null
-    ): TransferEventFilter;
-
-    "Approval(address,address,uint256)"(
-      _owner?: string | null,
-      _approved?: string | null,
-      _tokenId?: BigNumberish | null
-    ): ApprovalEventFilter;
-    Approval(
-      _owner?: string | null,
-      _approved?: string | null,
-      _tokenId?: BigNumberish | null
-    ): ApprovalEventFilter;
-
-    "ApprovalForAll(address,address,bool)"(
-      _owner?: string | null,
-      _operator?: string | null,
-      _approved?: null
-    ): ApprovalForAllEventFilter;
-    ApprovalForAll(
-      _owner?: string | null,
-      _operator?: string | null,
-      _approved?: null
-    ): ApprovalForAllEventFilter;
-  };
-
-  estimateGas: {
-    supportsInterface(
-      interface_id: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    ownerOf(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getApproved(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    isApprovedForAll(
-      owner: string,
-      operator: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    transferFrom(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "safeTransferFrom(address,address,uint256)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "safeTransferFrom(address,address,uint256,bytes)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    approve(
-      approved: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setApprovalForAll(
-      operator: string,
-      approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    allowlistMint(
-      mint_amount: BigNumberish,
-      approved_amount: BigNumberish,
-      sig: BytesLike,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    mint(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    tokenURI(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    contractURI(overrides?: CallOverrides): Promise<BigNumber>;
-
-    set_minter(
-      minter: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    set_al_signer(
-      al_signer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    set_base_uri(
-      base_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    set_contract_uri(
-      new_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    set_owner(
-      new_addr: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    set_revealed(
-      flag: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdraw(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    admin_withdraw_erc20(
-      coin: string,
-      target: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    start_al_mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    stop_al_mint(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    tokenByIndex(
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    tokenOfOwnerByIndex(
-      owner: string,
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    tokensForOwner(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    base_uri(overrides?: CallOverrides): Promise<BigNumber>;
-
-    revealed(overrides?: CallOverrides): Promise<BigNumber>;
-
-    default_uri(overrides?: CallOverrides): Promise<BigNumber>;
-
-    al_mint_started(overrides?: CallOverrides): Promise<BigNumber>;
-
-    al_signer(overrides?: CallOverrides): Promise<BigNumber>;
-
-    minter(overrides?: CallOverrides): Promise<BigNumber>;
-
-    al_mint_amount(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    supportsInterface(
-      interface_id: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    ownerOf(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getApproved(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    isApprovedForAll(
-      owner: string,
-      operator: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    transferFrom(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "safeTransferFrom(address,address,uint256)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "safeTransferFrom(address,address,uint256,bytes)"(
-      from_addr: string,
-      to_addr: string,
-      token_id: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    approve(
-      approved: string,
-      token_id: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setApprovalForAll(
-      operator: string,
-      approved: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    allowlistMint(
-      mint_amount: BigNumberish,
-      approved_amount: BigNumberish,
-      sig: BytesLike,
-      overrides?: PayableOverrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    tokenURI(
-      token_id: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    contractURI(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    set_minter(
-      minter: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_al_signer(
-      al_signer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_base_uri(
-      base_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_contract_uri(
-      new_uri: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_owner(
-      new_addr: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_revealed(
-      flag: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    admin_withdraw_erc20(
-      coin: string,
-      target: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    start_al_mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stop_al_mint(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    tokenByIndex(
-      _index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    tokenOfOwnerByIndex(
-      owner: string,
-      index: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    tokensForOwner(
-      owner: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    base_uri(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    revealed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    default_uri(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    al_mint_started(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    al_signer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    minter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    al_mint_amount(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+
+    "ApprovalForAll(address,address,bool)": TypedContractEvent<
+      ApprovalForAllEvent.InputTuple,
+      ApprovalForAllEvent.OutputTuple,
+      ApprovalForAllEvent.OutputObject
+    >;
+    ApprovalForAll: TypedContractEvent<
+      ApprovalForAllEvent.InputTuple,
+      ApprovalForAllEvent.OutputTuple,
+      ApprovalForAllEvent.OutputObject
+    >;
   };
 }

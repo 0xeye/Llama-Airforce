@@ -3,138 +3,71 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
 export declare namespace PirexCvxConvex {
   export type ConvexRewardStruct = {
-    token: string;
+    token: AddressLike;
     amount: BigNumberish;
     balance: BigNumberish;
   };
 
-  export type ConvexRewardStructOutput = [string, BigNumber, BigNumber] & {
-    token: string;
-    amount: BigNumber;
-    balance: BigNumber;
-  };
+  export type ConvexRewardStructOutput = [
+    token: string,
+    amount: bigint,
+    balance: bigint
+  ] & { token: string; amount: bigint; balance: bigint };
 }
 
 export declare namespace PirexCvx {
   export type EmergencyMigrationStruct = {
-    recipient: string;
-    tokens: string[];
+    recipient: AddressLike;
+    tokens: AddressLike[];
   };
 
-  export type EmergencyMigrationStructOutput = [string, string[]] & {
-    recipient: string;
-    tokens: string[];
-  };
+  export type EmergencyMigrationStructOutput = [
+    recipient: string,
+    tokens: string[]
+  ] & { recipient: string; tokens: string[] };
 }
 
 export declare namespace IVotiumMultiMerkleStash {
   export type ClaimParamStruct = {
-    token: string;
+    token: AddressLike;
     index: BigNumberish;
     amount: BigNumberish;
     merkleProof: BytesLike[];
   };
 
   export type ClaimParamStructOutput = [
-    string,
-    BigNumber,
-    BigNumber,
-    string[]
-  ] & {
-    token: string;
-    index: BigNumber;
-    amount: BigNumber;
-    merkleProof: string[];
-  };
+    token: string,
+    index: bigint,
+    amount: bigint,
+    merkleProof: string[]
+  ] & { token: string; index: bigint; amount: bigint; merkleProof: string[] };
 }
 
-export interface PirexCvxInterface extends utils.Interface {
-  functions: {
-    "CVX()": FunctionFragment;
-    "EPOCH_DURATION()": FunctionFragment;
-    "FEE_DENOMINATOR()": FunctionFragment;
-    "FEE_MAX()": FunctionFragment;
-    "MAX_REDEMPTION_TIME()": FunctionFragment;
-    "addDeveloper(address)": FunctionFragment;
-    "claimMiscRewards()": FunctionFragment;
-    "claimVotiumRewards((address,uint256,uint256,bytes32[])[])": FunctionFragment;
-    "clearVoteDelegate()": FunctionFragment;
-    "cvxDelegateRegistry()": FunctionFragment;
-    "cvxLocker()": FunctionFragment;
-    "delegationSpace()": FunctionFragment;
-    "deposit(uint256,address,bool,address)": FunctionFragment;
-    "developers(address)": FunctionFragment;
-    "emergencyExecutor()": FunctionFragment;
-    "emergencyMigration()": FunctionFragment;
-    "exchangeFutures(uint256,uint256,address,uint8)": FunctionFragment;
-    "executeEmergencyMigration()": FunctionFragment;
-    "fees(uint8)": FunctionFragment;
-    "getCurrentEpoch()": FunctionFragment;
-    "initializeEmergencyExecutor(address)": FunctionFragment;
-    "initiateRedemptions(uint256[],uint8,uint256[],address)": FunctionFragment;
-    "lock()": FunctionFragment;
-    "outstandingRedemptions()": FunctionFragment;
-    "owner()": FunctionFragment;
-    "paused()": FunctionFragment;
-    "pausedRelock()": FunctionFragment;
-    "pendingLocks()": FunctionFragment;
-    "pirexFees()": FunctionFragment;
-    "pxCvx()": FunctionFragment;
-    "redeem(uint256[],uint256[],address)": FunctionFragment;
-    "redeemFuturesRewards(uint256,address)": FunctionFragment;
-    "redeemLegacy(uint256[],uint256[],address)": FunctionFragment;
-    "redeemSnapshotRewards(uint256,uint256[],address)": FunctionFragment;
-    "redemptions(uint256)": FunctionFragment;
-    "removeDeveloper(address)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "rpxCvx()": FunctionFragment;
-    "setContract(uint8,address)": FunctionFragment;
-    "setConvexContract(uint8,address)": FunctionFragment;
-    "setDelegationSpace(string,bool)": FunctionFragment;
-    "setEmergencyMigration((address,address[]))": FunctionFragment;
-    "setFee(uint8,uint32)": FunctionFragment;
-    "setPauseState(bool)": FunctionFragment;
-    "setUpxCvxDeprecated(bool)": FunctionFragment;
-    "setVoteDelegate(address)": FunctionFragment;
-    "spxCvx()": FunctionFragment;
-    "stake(uint256,uint8,uint256,address)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "unionPirex()": FunctionFragment;
-    "unlock()": FunctionFragment;
-    "unstake(uint256,uint256,address)": FunctionFragment;
-    "upxCvx()": FunctionFragment;
-    "upxCvxDeprecated()": FunctionFragment;
-    "votiumMultiMerkleStash()": FunctionFragment;
-    "vpxCvx()": FunctionFragment;
-  };
-
+export interface PirexCvxInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "CVX"
       | "EPOCH_DURATION"
       | "FEE_DENOMINATOR"
@@ -193,6 +126,36 @@ export interface PirexCvxInterface extends utils.Interface {
       | "vpxCvx"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "AddDeveloper"
+      | "ClaimMiscRewards"
+      | "ClaimVotiumReward"
+      | "ClearVoteDelegate"
+      | "Deposit"
+      | "ExchangeFutures"
+      | "ExecuteEmergencyMigration"
+      | "InitializeEmergencyExecutor"
+      | "InitiateRedemptions"
+      | "MintFutures"
+      | "OwnershipTransferred"
+      | "Paused"
+      | "Redeem"
+      | "RedeemFuturesRewards"
+      | "RedeemSnapshotRewards"
+      | "RemoveDeveloper"
+      | "SetContract"
+      | "SetConvexContract"
+      | "SetDelegationSpace"
+      | "SetEmergencyMigration"
+      | "SetFee"
+      | "SetUpxCvxDeprecated"
+      | "SetVoteDelegate"
+      | "Stake"
+      | "Unpaused"
+      | "Unstake"
+  ): EventFragment;
+
   encodeFunctionData(functionFragment: "CVX", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "EPOCH_DURATION",
@@ -209,7 +172,7 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "addDeveloper",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "claimMiscRewards",
@@ -234,9 +197,12 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [BigNumberish, string, boolean, string]
+    values: [BigNumberish, AddressLike, boolean, AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "developers", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "developers",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "emergencyExecutor",
     values?: undefined
@@ -247,7 +213,7 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "exchangeFutures",
-    values: [BigNumberish, BigNumberish, string, BigNumberish]
+    values: [BigNumberish, BigNumberish, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "executeEmergencyMigration",
@@ -260,11 +226,11 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "initializeEmergencyExecutor",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "initiateRedemptions",
-    values: [BigNumberish[], BigNumberish, BigNumberish[], string]
+    values: [BigNumberish[], BigNumberish, BigNumberish[], AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "lock", values?: undefined): string;
   encodeFunctionData(
@@ -285,19 +251,19 @@ export interface PirexCvxInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "pxCvx", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "redeem",
-    values: [BigNumberish[], BigNumberish[], string]
+    values: [BigNumberish[], BigNumberish[], AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "redeemFuturesRewards",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "redeemLegacy",
-    values: [BigNumberish[], BigNumberish[], string]
+    values: [BigNumberish[], BigNumberish[], AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "redeemSnapshotRewards",
-    values: [BigNumberish, BigNumberish[], string]
+    values: [BigNumberish, BigNumberish[], AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "redemptions",
@@ -305,7 +271,7 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "removeDeveloper",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -314,11 +280,11 @@ export interface PirexCvxInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "rpxCvx", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "setContract",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setConvexContract",
-    values: [BigNumberish, string]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setDelegationSpace",
@@ -342,16 +308,16 @@ export interface PirexCvxInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setVoteDelegate",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "spxCvx", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "stake",
-    values: [BigNumberish, BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "unionPirex",
@@ -360,7 +326,7 @@ export interface PirexCvxInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "unlock", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "unstake",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "upxCvx", values?: undefined): string;
   encodeFunctionData(
@@ -534,1704 +500,1451 @@ export interface PirexCvxInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "vpxCvx", data: BytesLike): Result;
-
-  events: {
-    "AddDeveloper(address)": EventFragment;
-    "ClaimMiscRewards(uint256,tuple[])": EventFragment;
-    "ClaimVotiumReward(address,uint256,uint256)": EventFragment;
-    "ClearVoteDelegate()": EventFragment;
-    "Deposit(uint256,address,bool,address)": EventFragment;
-    "ExchangeFutures(uint256,uint256,address,uint8)": EventFragment;
-    "ExecuteEmergencyMigration(address,address[])": EventFragment;
-    "InitializeEmergencyExecutor(address)": EventFragment;
-    "InitiateRedemptions(uint256[],uint8,uint256[],address)": EventFragment;
-    "MintFutures(uint256,uint8,uint256,address)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "Paused(address)": EventFragment;
-    "Redeem(uint256[],uint256[],address,bool)": EventFragment;
-    "RedeemFuturesRewards(uint256,address,bytes32[])": EventFragment;
-    "RedeemSnapshotRewards(uint256,uint256[],address,uint256,uint256)": EventFragment;
-    "RemoveDeveloper(address)": EventFragment;
-    "SetContract(uint8,address)": EventFragment;
-    "SetConvexContract(uint8,address)": EventFragment;
-    "SetDelegationSpace(string,bool)": EventFragment;
-    "SetEmergencyMigration(tuple)": EventFragment;
-    "SetFee(uint8,uint32)": EventFragment;
-    "SetUpxCvxDeprecated(bool)": EventFragment;
-    "SetVoteDelegate(address)": EventFragment;
-    "Stake(uint256,uint8,uint256,address)": EventFragment;
-    "Unpaused(address)": EventFragment;
-    "Unstake(uint256,uint256,address)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "AddDeveloper"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ClaimMiscRewards"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ClaimVotiumReward"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ClearVoteDelegate"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ExchangeFutures"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ExecuteEmergencyMigration"): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "InitializeEmergencyExecutor"
-  ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "InitiateRedemptions"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MintFutures"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Redeem"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RedeemFuturesRewards"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RedeemSnapshotRewards"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RemoveDeveloper"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetContract"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetConvexContract"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetDelegationSpace"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetEmergencyMigration"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetFee"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetUpxCvxDeprecated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetVoteDelegate"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Stake"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Unstake"): EventFragment;
 }
 
-export interface AddDeveloperEventObject {
-  developer: string;
+export namespace AddDeveloperEvent {
+  export type InputTuple = [developer: AddressLike];
+  export type OutputTuple = [developer: string];
+  export interface OutputObject {
+    developer: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type AddDeveloperEvent = TypedEvent<[string], AddDeveloperEventObject>;
 
-export type AddDeveloperEventFilter = TypedEventFilter<AddDeveloperEvent>;
-
-export interface ClaimMiscRewardsEventObject {
-  timestamp: BigNumber;
-  rewards: PirexCvxConvex.ConvexRewardStructOutput[];
+export namespace ClaimMiscRewardsEvent {
+  export type InputTuple = [
+    timestamp: BigNumberish,
+    rewards: PirexCvxConvex.ConvexRewardStruct[]
+  ];
+  export type OutputTuple = [
+    timestamp: bigint,
+    rewards: PirexCvxConvex.ConvexRewardStructOutput[]
+  ];
+  export interface OutputObject {
+    timestamp: bigint;
+    rewards: PirexCvxConvex.ConvexRewardStructOutput[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ClaimMiscRewardsEvent = TypedEvent<
-  [BigNumber, PirexCvxConvex.ConvexRewardStructOutput[]],
-  ClaimMiscRewardsEventObject
->;
 
-export type ClaimMiscRewardsEventFilter =
-  TypedEventFilter<ClaimMiscRewardsEvent>;
-
-export interface ClaimVotiumRewardEventObject {
-  token: string;
-  index: BigNumber;
-  amount: BigNumber;
+export namespace ClaimVotiumRewardEvent {
+  export type InputTuple = [
+    token: AddressLike,
+    index: BigNumberish,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [token: string, index: bigint, amount: bigint];
+  export interface OutputObject {
+    token: string;
+    index: bigint;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ClaimVotiumRewardEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  ClaimVotiumRewardEventObject
->;
 
-export type ClaimVotiumRewardEventFilter =
-  TypedEventFilter<ClaimVotiumRewardEvent>;
-
-export interface ClearVoteDelegateEventObject {}
-export type ClearVoteDelegateEvent = TypedEvent<
-  [],
-  ClearVoteDelegateEventObject
->;
-
-export type ClearVoteDelegateEventFilter =
-  TypedEventFilter<ClearVoteDelegateEvent>;
-
-export interface DepositEventObject {
-  assets: BigNumber;
-  receiver: string;
-  shouldCompound: boolean;
-  developer: string;
+export namespace ClearVoteDelegateEvent {
+  export type InputTuple = [];
+  export type OutputTuple = [];
+  export interface OutputObject {}
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type DepositEvent = TypedEvent<
-  [BigNumber, string, boolean, string],
-  DepositEventObject
->;
 
-export type DepositEventFilter = TypedEventFilter<DepositEvent>;
-
-export interface ExchangeFuturesEventObject {
-  epoch: BigNumber;
-  amount: BigNumber;
-  receiver: string;
-  f: number;
-}
-export type ExchangeFuturesEvent = TypedEvent<
-  [BigNumber, BigNumber, string, number],
-  ExchangeFuturesEventObject
->;
-
-export type ExchangeFuturesEventFilter = TypedEventFilter<ExchangeFuturesEvent>;
-
-export interface ExecuteEmergencyMigrationEventObject {
-  recipient: string;
-  tokens: string[];
-}
-export type ExecuteEmergencyMigrationEvent = TypedEvent<
-  [string, string[]],
-  ExecuteEmergencyMigrationEventObject
->;
-
-export type ExecuteEmergencyMigrationEventFilter =
-  TypedEventFilter<ExecuteEmergencyMigrationEvent>;
-
-export interface InitializeEmergencyExecutorEventObject {
-  _emergencyExecutor: string;
-}
-export type InitializeEmergencyExecutorEvent = TypedEvent<
-  [string],
-  InitializeEmergencyExecutorEventObject
->;
-
-export type InitializeEmergencyExecutorEventFilter =
-  TypedEventFilter<InitializeEmergencyExecutorEvent>;
-
-export interface InitiateRedemptionsEventObject {
-  lockIndexes: BigNumber[];
-  f: number;
-  assets: BigNumber[];
-  receiver: string;
-}
-export type InitiateRedemptionsEvent = TypedEvent<
-  [BigNumber[], number, BigNumber[], string],
-  InitiateRedemptionsEventObject
->;
-
-export type InitiateRedemptionsEventFilter =
-  TypedEventFilter<InitiateRedemptionsEvent>;
-
-export interface MintFuturesEventObject {
-  rounds: BigNumber;
-  f: number;
-  assets: BigNumber;
-  receiver: string;
-}
-export type MintFuturesEvent = TypedEvent<
-  [BigNumber, number, BigNumber, string],
-  MintFuturesEventObject
->;
-
-export type MintFuturesEventFilter = TypedEventFilter<MintFuturesEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
-}
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
-
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface PausedEventObject {
-  account: string;
-}
-export type PausedEvent = TypedEvent<[string], PausedEventObject>;
-
-export type PausedEventFilter = TypedEventFilter<PausedEvent>;
-
-export interface RedeemEventObject {
-  unlockTimes: BigNumber[];
-  assets: BigNumber[];
-  receiver: string;
-  legacy: boolean;
-}
-export type RedeemEvent = TypedEvent<
-  [BigNumber[], BigNumber[], string, boolean],
-  RedeemEventObject
->;
-
-export type RedeemEventFilter = TypedEventFilter<RedeemEvent>;
-
-export interface RedeemFuturesRewardsEventObject {
-  epoch: BigNumber;
-  receiver: string;
-  rewards: string[];
-}
-export type RedeemFuturesRewardsEvent = TypedEvent<
-  [BigNumber, string, string[]],
-  RedeemFuturesRewardsEventObject
->;
-
-export type RedeemFuturesRewardsEventFilter =
-  TypedEventFilter<RedeemFuturesRewardsEvent>;
-
-export interface RedeemSnapshotRewardsEventObject {
-  epoch: BigNumber;
-  rewardIndexes: BigNumber[];
-  receiver: string;
-  snapshotBalance: BigNumber;
-  snapshotSupply: BigNumber;
-}
-export type RedeemSnapshotRewardsEvent = TypedEvent<
-  [BigNumber, BigNumber[], string, BigNumber, BigNumber],
-  RedeemSnapshotRewardsEventObject
->;
-
-export type RedeemSnapshotRewardsEventFilter =
-  TypedEventFilter<RedeemSnapshotRewardsEvent>;
-
-export interface RemoveDeveloperEventObject {
-  developer: string;
-}
-export type RemoveDeveloperEvent = TypedEvent<
-  [string],
-  RemoveDeveloperEventObject
->;
-
-export type RemoveDeveloperEventFilter = TypedEventFilter<RemoveDeveloperEvent>;
-
-export interface SetContractEventObject {
-  c: number;
-  contractAddress: string;
-}
-export type SetContractEvent = TypedEvent<
-  [number, string],
-  SetContractEventObject
->;
-
-export type SetContractEventFilter = TypedEventFilter<SetContractEvent>;
-
-export interface SetConvexContractEventObject {
-  c: number;
-  contractAddress: string;
-}
-export type SetConvexContractEvent = TypedEvent<
-  [number, string],
-  SetConvexContractEventObject
->;
-
-export type SetConvexContractEventFilter =
-  TypedEventFilter<SetConvexContractEvent>;
-
-export interface SetDelegationSpaceEventObject {
-  _delegationSpace: string;
-  shouldClear: boolean;
-}
-export type SetDelegationSpaceEvent = TypedEvent<
-  [string, boolean],
-  SetDelegationSpaceEventObject
->;
-
-export type SetDelegationSpaceEventFilter =
-  TypedEventFilter<SetDelegationSpaceEvent>;
-
-export interface SetEmergencyMigrationEventObject {
-  _emergencyMigration: PirexCvx.EmergencyMigrationStructOutput;
-}
-export type SetEmergencyMigrationEvent = TypedEvent<
-  [PirexCvx.EmergencyMigrationStructOutput],
-  SetEmergencyMigrationEventObject
->;
-
-export type SetEmergencyMigrationEventFilter =
-  TypedEventFilter<SetEmergencyMigrationEvent>;
-
-export interface SetFeeEventObject {
-  f: number;
-  fee: number;
-}
-export type SetFeeEvent = TypedEvent<[number, number], SetFeeEventObject>;
-
-export type SetFeeEventFilter = TypedEventFilter<SetFeeEvent>;
-
-export interface SetUpxCvxDeprecatedEventObject {
-  state: boolean;
-}
-export type SetUpxCvxDeprecatedEvent = TypedEvent<
-  [boolean],
-  SetUpxCvxDeprecatedEventObject
->;
-
-export type SetUpxCvxDeprecatedEventFilter =
-  TypedEventFilter<SetUpxCvxDeprecatedEvent>;
-
-export interface SetVoteDelegateEventObject {
-  voteDelegate: string;
-}
-export type SetVoteDelegateEvent = TypedEvent<
-  [string],
-  SetVoteDelegateEventObject
->;
-
-export type SetVoteDelegateEventFilter = TypedEventFilter<SetVoteDelegateEvent>;
-
-export interface StakeEventObject {
-  rounds: BigNumber;
-  f: number;
-  assets: BigNumber;
-  receiver: string;
-}
-export type StakeEvent = TypedEvent<
-  [BigNumber, number, BigNumber, string],
-  StakeEventObject
->;
-
-export type StakeEventFilter = TypedEventFilter<StakeEvent>;
-
-export interface UnpausedEventObject {
-  account: string;
-}
-export type UnpausedEvent = TypedEvent<[string], UnpausedEventObject>;
-
-export type UnpausedEventFilter = TypedEventFilter<UnpausedEvent>;
-
-export interface UnstakeEventObject {
-  id: BigNumber;
-  assets: BigNumber;
-  receiver: string;
-}
-export type UnstakeEvent = TypedEvent<
-  [BigNumber, BigNumber, string],
-  UnstakeEventObject
->;
-
-export type UnstakeEventFilter = TypedEventFilter<UnstakeEvent>;
-
-export interface PirexCvx extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
-
-  interface: PirexCvxInterface;
-
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
-
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
-
-  functions: {
-    CVX(overrides?: CallOverrides): Promise<[string]>;
-
-    EPOCH_DURATION(overrides?: CallOverrides): Promise<[number]>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<[number]>;
-
-    FEE_MAX(overrides?: CallOverrides): Promise<[number]>;
-
-    MAX_REDEMPTION_TIME(overrides?: CallOverrides): Promise<[number]>;
-
-    addDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    claimMiscRewards(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    claimVotiumRewards(
-      votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    clearVoteDelegate(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    cvxDelegateRegistry(overrides?: CallOverrides): Promise<[string]>;
-
-    cvxLocker(overrides?: CallOverrides): Promise<[string]>;
-
-    delegationSpace(overrides?: CallOverrides): Promise<[string]>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      shouldCompound: boolean,
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    developers(arg0: string, overrides?: CallOverrides): Promise<[boolean]>;
-
-    emergencyExecutor(overrides?: CallOverrides): Promise<[string]>;
-
-    emergencyMigration(
-      overrides?: CallOverrides
-    ): Promise<[string] & { recipient: string }>;
-
-    exchangeFutures(
-      epoch: BigNumberish,
-      amount: BigNumberish,
-      receiver: string,
-      f: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    executeEmergencyMigration(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    fees(arg0: BigNumberish, overrides?: CallOverrides): Promise<[number]>;
-
-    getCurrentEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    initializeEmergencyExecutor(
-      _emergencyExecutor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    initiateRedemptions(
-      lockIndexes: BigNumberish[],
-      f: BigNumberish,
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    lock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    outstandingRedemptions(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    paused(overrides?: CallOverrides): Promise<[boolean]>;
-
-    pausedRelock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    pendingLocks(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    pirexFees(overrides?: CallOverrides): Promise<[string]>;
-
-    pxCvx(overrides?: CallOverrides): Promise<[string]>;
-
-    redeem(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    redeemFuturesRewards(
-      epoch: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    redeemLegacy(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    redeemSnapshotRewards(
-      epoch: BigNumberish,
-      rewardIndexes: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    redemptions(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    removeDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    rpxCvx(overrides?: CallOverrides): Promise<[string]>;
-
-    setContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setConvexContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setDelegationSpace(
-      _delegationSpace: string,
-      shouldClear: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setEmergencyMigration(
-      _emergencyMigration: PirexCvx.EmergencyMigrationStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setFee(
-      f: BigNumberish,
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setPauseState(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setUpxCvxDeprecated(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setVoteDelegate(
-      voteDelegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    spxCvx(overrides?: CallOverrides): Promise<[string]>;
-
-    stake(
-      rounds: BigNumberish,
-      f: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    unionPirex(overrides?: CallOverrides): Promise<[string]>;
-
-    unlock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    unstake(
-      id: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    upxCvx(overrides?: CallOverrides): Promise<[string]>;
-
-    upxCvxDeprecated(overrides?: CallOverrides): Promise<[boolean]>;
-
-    votiumMultiMerkleStash(overrides?: CallOverrides): Promise<[string]>;
-
-    vpxCvx(overrides?: CallOverrides): Promise<[string]>;
-  };
-
-  CVX(overrides?: CallOverrides): Promise<string>;
-
-  EPOCH_DURATION(overrides?: CallOverrides): Promise<number>;
-
-  FEE_DENOMINATOR(overrides?: CallOverrides): Promise<number>;
-
-  FEE_MAX(overrides?: CallOverrides): Promise<number>;
-
-  MAX_REDEMPTION_TIME(overrides?: CallOverrides): Promise<number>;
-
-  addDeveloper(
-    developer: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimMiscRewards(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  claimVotiumRewards(
-    votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[],
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  clearVoteDelegate(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  cvxDelegateRegistry(overrides?: CallOverrides): Promise<string>;
-
-  cvxLocker(overrides?: CallOverrides): Promise<string>;
-
-  delegationSpace(overrides?: CallOverrides): Promise<string>;
-
-  deposit(
+export namespace DepositEvent {
+  export type InputTuple = [
     assets: BigNumberish,
+    receiver: AddressLike,
+    shouldCompound: boolean,
+    developer: AddressLike
+  ];
+  export type OutputTuple = [
+    assets: bigint,
     receiver: string,
     shouldCompound: boolean,
-    developer: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    developer: string
+  ];
+  export interface OutputObject {
+    assets: bigint;
+    receiver: string;
+    shouldCompound: boolean;
+    developer: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  developers(arg0: string, overrides?: CallOverrides): Promise<boolean>;
-
-  emergencyExecutor(overrides?: CallOverrides): Promise<string>;
-
-  emergencyMigration(overrides?: CallOverrides): Promise<string>;
-
-  exchangeFutures(
+export namespace ExchangeFuturesEvent {
+  export type InputTuple = [
     epoch: BigNumberish,
     amount: BigNumberish,
+    receiver: AddressLike,
+    f: BigNumberish
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    amount: bigint,
     receiver: string,
-    f: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    f: bigint
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    amount: bigint;
+    receiver: string;
+    f: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  executeEmergencyMigration(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+export namespace ExecuteEmergencyMigrationEvent {
+  export type InputTuple = [recipient: AddressLike, tokens: AddressLike[]];
+  export type OutputTuple = [recipient: string, tokens: string[]];
+  export interface OutputObject {
+    recipient: string;
+    tokens: string[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  fees(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
+export namespace InitializeEmergencyExecutorEvent {
+  export type InputTuple = [_emergencyExecutor: AddressLike];
+  export type OutputTuple = [_emergencyExecutor: string];
+  export interface OutputObject {
+    _emergencyExecutor: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  getCurrentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  initializeEmergencyExecutor(
-    _emergencyExecutor: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  initiateRedemptions(
+export namespace InitiateRedemptionsEvent {
+  export type InputTuple = [
     lockIndexes: BigNumberish[],
     f: BigNumberish,
     assets: BigNumberish[],
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    receiver: AddressLike
+  ];
+  export type OutputTuple = [
+    lockIndexes: bigint[],
+    f: bigint,
+    assets: bigint[],
+    receiver: string
+  ];
+  export interface OutputObject {
+    lockIndexes: bigint[];
+    f: bigint;
+    assets: bigint[];
+    receiver: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  lock(overrides?: Overrides & { from?: string }): Promise<ContractTransaction>;
-
-  outstandingRedemptions(overrides?: CallOverrides): Promise<BigNumber>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  paused(overrides?: CallOverrides): Promise<boolean>;
-
-  pausedRelock(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  pendingLocks(overrides?: CallOverrides): Promise<BigNumber>;
-
-  pirexFees(overrides?: CallOverrides): Promise<string>;
-
-  pxCvx(overrides?: CallOverrides): Promise<string>;
-
-  redeem(
-    unlockTimes: BigNumberish[],
-    assets: BigNumberish[],
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  redeemFuturesRewards(
-    epoch: BigNumberish,
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  redeemLegacy(
-    unlockTimes: BigNumberish[],
-    assets: BigNumberish[],
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  redeemSnapshotRewards(
-    epoch: BigNumberish,
-    rewardIndexes: BigNumberish[],
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  redemptions(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  removeDeveloper(
-    developer: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  rpxCvx(overrides?: CallOverrides): Promise<string>;
-
-  setContract(
-    c: BigNumberish,
-    contractAddress: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setConvexContract(
-    c: BigNumberish,
-    contractAddress: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setDelegationSpace(
-    _delegationSpace: string,
-    shouldClear: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setEmergencyMigration(
-    _emergencyMigration: PirexCvx.EmergencyMigrationStruct,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setFee(
-    f: BigNumberish,
-    fee: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setPauseState(
-    state: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setUpxCvxDeprecated(
-    state: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setVoteDelegate(
-    voteDelegate: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  spxCvx(overrides?: CallOverrides): Promise<string>;
-
-  stake(
+export namespace MintFuturesEvent {
+  export type InputTuple = [
     rounds: BigNumberish,
     f: BigNumberish,
     assets: BigNumberish,
+    receiver: AddressLike
+  ];
+  export type OutputTuple = [
+    rounds: bigint,
+    f: bigint,
+    assets: bigint,
+    receiver: string
+  ];
+  export interface OutputObject {
+    rounds: bigint;
+    f: bigint;
+    assets: bigint;
+    receiver: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace PausedEvent {
+  export type InputTuple = [account: AddressLike];
+  export type OutputTuple = [account: string];
+  export interface OutputObject {
+    account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedeemEvent {
+  export type InputTuple = [
+    unlockTimes: BigNumberish[],
+    assets: BigNumberish[],
+    receiver: AddressLike,
+    legacy: boolean
+  ];
+  export type OutputTuple = [
+    unlockTimes: bigint[],
+    assets: bigint[],
     receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    legacy: boolean
+  ];
+  export interface OutputObject {
+    unlockTimes: bigint[];
+    assets: bigint[];
+    receiver: string;
+    legacy: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+export namespace RedeemFuturesRewardsEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    receiver: AddressLike,
+    rewards: BytesLike[]
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    receiver: string,
+    rewards: string[]
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    receiver: string;
+    rewards: string[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  unionPirex(overrides?: CallOverrides): Promise<string>;
+export namespace RedeemSnapshotRewardsEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    rewardIndexes: BigNumberish[],
+    receiver: AddressLike,
+    snapshotBalance: BigNumberish,
+    snapshotSupply: BigNumberish
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    rewardIndexes: bigint[],
+    receiver: string,
+    snapshotBalance: bigint,
+    snapshotSupply: bigint
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    rewardIndexes: bigint[];
+    receiver: string;
+    snapshotBalance: bigint;
+    snapshotSupply: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  unlock(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+export namespace RemoveDeveloperEvent {
+  export type InputTuple = [developer: AddressLike];
+  export type OutputTuple = [developer: string];
+  export interface OutputObject {
+    developer: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  unstake(
+export namespace SetContractEvent {
+  export type InputTuple = [c: BigNumberish, contractAddress: AddressLike];
+  export type OutputTuple = [c: bigint, contractAddress: string];
+  export interface OutputObject {
+    c: bigint;
+    contractAddress: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetConvexContractEvent {
+  export type InputTuple = [c: BigNumberish, contractAddress: AddressLike];
+  export type OutputTuple = [c: bigint, contractAddress: string];
+  export interface OutputObject {
+    c: bigint;
+    contractAddress: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetDelegationSpaceEvent {
+  export type InputTuple = [_delegationSpace: string, shouldClear: boolean];
+  export type OutputTuple = [_delegationSpace: string, shouldClear: boolean];
+  export interface OutputObject {
+    _delegationSpace: string;
+    shouldClear: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetEmergencyMigrationEvent {
+  export type InputTuple = [
+    _emergencyMigration: PirexCvx.EmergencyMigrationStruct
+  ];
+  export type OutputTuple = [
+    _emergencyMigration: PirexCvx.EmergencyMigrationStructOutput
+  ];
+  export interface OutputObject {
+    _emergencyMigration: PirexCvx.EmergencyMigrationStructOutput;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetFeeEvent {
+  export type InputTuple = [f: BigNumberish, fee: BigNumberish];
+  export type OutputTuple = [f: bigint, fee: bigint];
+  export interface OutputObject {
+    f: bigint;
+    fee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetUpxCvxDeprecatedEvent {
+  export type InputTuple = [state: boolean];
+  export type OutputTuple = [state: boolean];
+  export interface OutputObject {
+    state: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SetVoteDelegateEvent {
+  export type InputTuple = [voteDelegate: AddressLike];
+  export type OutputTuple = [voteDelegate: string];
+  export interface OutputObject {
+    voteDelegate: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace StakeEvent {
+  export type InputTuple = [
+    rounds: BigNumberish,
+    f: BigNumberish,
+    assets: BigNumberish,
+    receiver: AddressLike
+  ];
+  export type OutputTuple = [
+    rounds: bigint,
+    f: bigint,
+    assets: bigint,
+    receiver: string
+  ];
+  export interface OutputObject {
+    rounds: bigint;
+    f: bigint;
+    assets: bigint;
+    receiver: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace UnpausedEvent {
+  export type InputTuple = [account: AddressLike];
+  export type OutputTuple = [account: string];
+  export interface OutputObject {
+    account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace UnstakeEvent {
+  export type InputTuple = [
     id: BigNumberish,
     assets: BigNumberish,
-    receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    receiver: AddressLike
+  ];
+  export type OutputTuple = [id: bigint, assets: bigint, receiver: string];
+  export interface OutputObject {
+    id: bigint;
+    assets: bigint;
+    receiver: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
-  upxCvx(overrides?: CallOverrides): Promise<string>;
+export interface PirexCvx extends BaseContract {
+  connect(runner?: ContractRunner | null): PirexCvx;
+  waitForDeployment(): Promise<this>;
 
-  upxCvxDeprecated(overrides?: CallOverrides): Promise<boolean>;
+  interface: PirexCvxInterface;
 
-  votiumMultiMerkleStash(overrides?: CallOverrides): Promise<string>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  vpxCvx(overrides?: CallOverrides): Promise<string>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  callStatic: {
-    CVX(overrides?: CallOverrides): Promise<string>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    EPOCH_DURATION(overrides?: CallOverrides): Promise<number>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<number>;
+  CVX: TypedContractMethod<[], [string], "view">;
 
-    FEE_MAX(overrides?: CallOverrides): Promise<number>;
+  EPOCH_DURATION: TypedContractMethod<[], [bigint], "view">;
 
-    MAX_REDEMPTION_TIME(overrides?: CallOverrides): Promise<number>;
+  FEE_DENOMINATOR: TypedContractMethod<[], [bigint], "view">;
 
-    addDeveloper(developer: string, overrides?: CallOverrides): Promise<void>;
+  FEE_MAX: TypedContractMethod<[], [bigint], "view">;
 
-    claimMiscRewards(overrides?: CallOverrides): Promise<void>;
+  MAX_REDEMPTION_TIME: TypedContractMethod<[], [bigint], "view">;
 
-    claimVotiumRewards(
-      votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[],
-      overrides?: CallOverrides
-    ): Promise<void>;
+  addDeveloper: TypedContractMethod<
+    [developer: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    clearVoteDelegate(overrides?: CallOverrides): Promise<void>;
+  claimMiscRewards: TypedContractMethod<[], [void], "nonpayable">;
 
-    cvxDelegateRegistry(overrides?: CallOverrides): Promise<string>;
+  claimVotiumRewards: TypedContractMethod<
+    [votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[]],
+    [void],
+    "nonpayable"
+  >;
 
-    cvxLocker(overrides?: CallOverrides): Promise<string>;
+  clearVoteDelegate: TypedContractMethod<[], [void], "nonpayable">;
 
-    delegationSpace(overrides?: CallOverrides): Promise<string>;
+  cvxDelegateRegistry: TypedContractMethod<[], [string], "view">;
 
-    deposit(
+  cvxLocker: TypedContractMethod<[], [string], "view">;
+
+  delegationSpace: TypedContractMethod<[], [string], "view">;
+
+  deposit: TypedContractMethod<
+    [
       assets: BigNumberish,
-      receiver: string,
+      receiver: AddressLike,
       shouldCompound: boolean,
-      developer: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      developer: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    developers(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+  developers: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
 
-    emergencyExecutor(overrides?: CallOverrides): Promise<string>;
+  emergencyExecutor: TypedContractMethod<[], [string], "view">;
 
-    emergencyMigration(overrides?: CallOverrides): Promise<string>;
+  emergencyMigration: TypedContractMethod<[], [string], "view">;
 
-    exchangeFutures(
+  exchangeFutures: TypedContractMethod<
+    [
       epoch: BigNumberish,
       amount: BigNumberish,
-      receiver: string,
-      f: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike,
+      f: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    executeEmergencyMigration(overrides?: CallOverrides): Promise<void>;
+  executeEmergencyMigration: TypedContractMethod<[], [void], "nonpayable">;
 
-    fees(arg0: BigNumberish, overrides?: CallOverrides): Promise<number>;
+  fees: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
-    getCurrentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
+  getCurrentEpoch: TypedContractMethod<[], [bigint], "view">;
 
-    initializeEmergencyExecutor(
-      _emergencyExecutor: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  initializeEmergencyExecutor: TypedContractMethod<
+    [_emergencyExecutor: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    initiateRedemptions(
+  initiateRedemptions: TypedContractMethod<
+    [
       lockIndexes: BigNumberish[],
       f: BigNumberish,
       assets: BigNumberish[],
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    lock(overrides?: CallOverrides): Promise<void>;
+  lock: TypedContractMethod<[], [void], "nonpayable">;
 
-    outstandingRedemptions(overrides?: CallOverrides): Promise<BigNumber>;
+  outstandingRedemptions: TypedContractMethod<[], [bigint], "view">;
 
-    owner(overrides?: CallOverrides): Promise<string>;
+  owner: TypedContractMethod<[], [string], "view">;
 
-    paused(overrides?: CallOverrides): Promise<boolean>;
+  paused: TypedContractMethod<[], [boolean], "view">;
 
-    pausedRelock(overrides?: CallOverrides): Promise<void>;
+  pausedRelock: TypedContractMethod<[], [void], "nonpayable">;
 
-    pendingLocks(overrides?: CallOverrides): Promise<BigNumber>;
+  pendingLocks: TypedContractMethod<[], [bigint], "view">;
 
-    pirexFees(overrides?: CallOverrides): Promise<string>;
+  pirexFees: TypedContractMethod<[], [string], "view">;
 
-    pxCvx(overrides?: CallOverrides): Promise<string>;
+  pxCvx: TypedContractMethod<[], [string], "view">;
 
-    redeem(
+  redeem: TypedContractMethod<
+    [
       unlockTimes: BigNumberish[],
       assets: BigNumberish[],
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    redeemFuturesRewards(
-      epoch: BigNumberish,
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  redeemFuturesRewards: TypedContractMethod<
+    [epoch: BigNumberish, receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    redeemLegacy(
+  redeemLegacy: TypedContractMethod<
+    [
       unlockTimes: BigNumberish[],
       assets: BigNumberish[],
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    redeemSnapshotRewards(
-      epoch: BigNumberish,
-      rewardIndexes: BigNumberish[],
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  redeemSnapshotRewards: TypedContractMethod<
+    [epoch: BigNumberish, rewardIndexes: BigNumberish[], receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    redemptions(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+  redemptions: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
-    removeDeveloper(
-      developer: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  removeDeveloper: TypedContractMethod<
+    [developer: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-    rpxCvx(overrides?: CallOverrides): Promise<string>;
+  rpxCvx: TypedContractMethod<[], [string], "view">;
 
-    setContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setContract: TypedContractMethod<
+    [c: BigNumberish, contractAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setConvexContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setConvexContract: TypedContractMethod<
+    [c: BigNumberish, contractAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    setDelegationSpace(
-      _delegationSpace: string,
-      shouldClear: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setDelegationSpace: TypedContractMethod<
+    [_delegationSpace: string, shouldClear: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    setEmergencyMigration(
-      _emergencyMigration: PirexCvx.EmergencyMigrationStruct,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setEmergencyMigration: TypedContractMethod<
+    [_emergencyMigration: PirexCvx.EmergencyMigrationStruct],
+    [void],
+    "nonpayable"
+  >;
 
-    setFee(
-      f: BigNumberish,
-      fee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setFee: TypedContractMethod<
+    [f: BigNumberish, fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    setPauseState(state: boolean, overrides?: CallOverrides): Promise<void>;
+  setPauseState: TypedContractMethod<[state: boolean], [void], "nonpayable">;
 
-    setUpxCvxDeprecated(
-      state: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setUpxCvxDeprecated: TypedContractMethod<
+    [state: boolean],
+    [void],
+    "nonpayable"
+  >;
 
-    setVoteDelegate(
-      voteDelegate: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  setVoteDelegate: TypedContractMethod<
+    [voteDelegate: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    spxCvx(overrides?: CallOverrides): Promise<string>;
+  spxCvx: TypedContractMethod<[], [string], "view">;
 
-    stake(
+  stake: TypedContractMethod<
+    [
       rounds: BigNumberish,
       f: BigNumberish,
       assets: BigNumberish,
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    unionPirex(overrides?: CallOverrides): Promise<string>;
+  unionPirex: TypedContractMethod<[], [string], "view">;
 
-    unlock(overrides?: CallOverrides): Promise<void>;
+  unlock: TypedContractMethod<[], [void], "nonpayable">;
 
-    unstake(
-      id: BigNumberish,
+  unstake: TypedContractMethod<
+    [id: BigNumberish, assets: BigNumberish, receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  upxCvx: TypedContractMethod<[], [string], "view">;
+
+  upxCvxDeprecated: TypedContractMethod<[], [boolean], "view">;
+
+  votiumMultiMerkleStash: TypedContractMethod<[], [string], "view">;
+
+  vpxCvx: TypedContractMethod<[], [string], "view">;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "CVX"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "EPOCH_DURATION"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "FEE_DENOMINATOR"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "FEE_MAX"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_REDEMPTION_TIME"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "addDeveloper"
+  ): TypedContractMethod<[developer: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "claimMiscRewards"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "claimVotiumRewards"
+  ): TypedContractMethod<
+    [votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "clearVoteDelegate"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "cvxDelegateRegistry"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "cvxLocker"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "delegationSpace"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [
       assets: BigNumberish,
-      receiver: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+      receiver: AddressLike,
+      shouldCompound: boolean,
+      developer: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "developers"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "emergencyExecutor"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "emergencyMigration"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "exchangeFutures"
+  ): TypedContractMethod<
+    [
+      epoch: BigNumberish,
+      amount: BigNumberish,
+      receiver: AddressLike,
+      f: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "executeEmergencyMigration"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "fees"
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getCurrentEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "initializeEmergencyExecutor"
+  ): TypedContractMethod<
+    [_emergencyExecutor: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "initiateRedemptions"
+  ): TypedContractMethod<
+    [
+      lockIndexes: BigNumberish[],
+      f: BigNumberish,
+      assets: BigNumberish[],
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "lock"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "outstandingRedemptions"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "paused"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "pausedRelock"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "pendingLocks"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "pirexFees"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "pxCvx"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "redeem"
+  ): TypedContractMethod<
+    [
+      unlockTimes: BigNumberish[],
+      assets: BigNumberish[],
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "redeemFuturesRewards"
+  ): TypedContractMethod<
+    [epoch: BigNumberish, receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "redeemLegacy"
+  ): TypedContractMethod<
+    [
+      unlockTimes: BigNumberish[],
+      assets: BigNumberish[],
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "redeemSnapshotRewards"
+  ): TypedContractMethod<
+    [epoch: BigNumberish, rewardIndexes: BigNumberish[], receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "redemptions"
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "removeDeveloper"
+  ): TypedContractMethod<[developer: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "rpxCvx"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "setContract"
+  ): TypedContractMethod<
+    [c: BigNumberish, contractAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setConvexContract"
+  ): TypedContractMethod<
+    [c: BigNumberish, contractAddress: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setDelegationSpace"
+  ): TypedContractMethod<
+    [_delegationSpace: string, shouldClear: boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setEmergencyMigration"
+  ): TypedContractMethod<
+    [_emergencyMigration: PirexCvx.EmergencyMigrationStruct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setFee"
+  ): TypedContractMethod<
+    [f: BigNumberish, fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setPauseState"
+  ): TypedContractMethod<[state: boolean], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setUpxCvxDeprecated"
+  ): TypedContractMethod<[state: boolean], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setVoteDelegate"
+  ): TypedContractMethod<[voteDelegate: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "spxCvx"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "stake"
+  ): TypedContractMethod<
+    [
+      rounds: BigNumberish,
+      f: BigNumberish,
+      assets: BigNumberish,
+      receiver: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "unionPirex"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "unlock"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "unstake"
+  ): TypedContractMethod<
+    [id: BigNumberish, assets: BigNumberish, receiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "upxCvx"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "upxCvxDeprecated"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "votiumMultiMerkleStash"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "vpxCvx"
+  ): TypedContractMethod<[], [string], "view">;
 
-    upxCvx(overrides?: CallOverrides): Promise<string>;
-
-    upxCvxDeprecated(overrides?: CallOverrides): Promise<boolean>;
-
-    votiumMultiMerkleStash(overrides?: CallOverrides): Promise<string>;
-
-    vpxCvx(overrides?: CallOverrides): Promise<string>;
-  };
+  getEvent(
+    key: "AddDeveloper"
+  ): TypedContractEvent<
+    AddDeveloperEvent.InputTuple,
+    AddDeveloperEvent.OutputTuple,
+    AddDeveloperEvent.OutputObject
+  >;
+  getEvent(
+    key: "ClaimMiscRewards"
+  ): TypedContractEvent<
+    ClaimMiscRewardsEvent.InputTuple,
+    ClaimMiscRewardsEvent.OutputTuple,
+    ClaimMiscRewardsEvent.OutputObject
+  >;
+  getEvent(
+    key: "ClaimVotiumReward"
+  ): TypedContractEvent<
+    ClaimVotiumRewardEvent.InputTuple,
+    ClaimVotiumRewardEvent.OutputTuple,
+    ClaimVotiumRewardEvent.OutputObject
+  >;
+  getEvent(
+    key: "ClearVoteDelegate"
+  ): TypedContractEvent<
+    ClearVoteDelegateEvent.InputTuple,
+    ClearVoteDelegateEvent.OutputTuple,
+    ClearVoteDelegateEvent.OutputObject
+  >;
+  getEvent(
+    key: "Deposit"
+  ): TypedContractEvent<
+    DepositEvent.InputTuple,
+    DepositEvent.OutputTuple,
+    DepositEvent.OutputObject
+  >;
+  getEvent(
+    key: "ExchangeFutures"
+  ): TypedContractEvent<
+    ExchangeFuturesEvent.InputTuple,
+    ExchangeFuturesEvent.OutputTuple,
+    ExchangeFuturesEvent.OutputObject
+  >;
+  getEvent(
+    key: "ExecuteEmergencyMigration"
+  ): TypedContractEvent<
+    ExecuteEmergencyMigrationEvent.InputTuple,
+    ExecuteEmergencyMigrationEvent.OutputTuple,
+    ExecuteEmergencyMigrationEvent.OutputObject
+  >;
+  getEvent(
+    key: "InitializeEmergencyExecutor"
+  ): TypedContractEvent<
+    InitializeEmergencyExecutorEvent.InputTuple,
+    InitializeEmergencyExecutorEvent.OutputTuple,
+    InitializeEmergencyExecutorEvent.OutputObject
+  >;
+  getEvent(
+    key: "InitiateRedemptions"
+  ): TypedContractEvent<
+    InitiateRedemptionsEvent.InputTuple,
+    InitiateRedemptionsEvent.OutputTuple,
+    InitiateRedemptionsEvent.OutputObject
+  >;
+  getEvent(
+    key: "MintFutures"
+  ): TypedContractEvent<
+    MintFuturesEvent.InputTuple,
+    MintFuturesEvent.OutputTuple,
+    MintFuturesEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "Paused"
+  ): TypedContractEvent<
+    PausedEvent.InputTuple,
+    PausedEvent.OutputTuple,
+    PausedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Redeem"
+  ): TypedContractEvent<
+    RedeemEvent.InputTuple,
+    RedeemEvent.OutputTuple,
+    RedeemEvent.OutputObject
+  >;
+  getEvent(
+    key: "RedeemFuturesRewards"
+  ): TypedContractEvent<
+    RedeemFuturesRewardsEvent.InputTuple,
+    RedeemFuturesRewardsEvent.OutputTuple,
+    RedeemFuturesRewardsEvent.OutputObject
+  >;
+  getEvent(
+    key: "RedeemSnapshotRewards"
+  ): TypedContractEvent<
+    RedeemSnapshotRewardsEvent.InputTuple,
+    RedeemSnapshotRewardsEvent.OutputTuple,
+    RedeemSnapshotRewardsEvent.OutputObject
+  >;
+  getEvent(
+    key: "RemoveDeveloper"
+  ): TypedContractEvent<
+    RemoveDeveloperEvent.InputTuple,
+    RemoveDeveloperEvent.OutputTuple,
+    RemoveDeveloperEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetContract"
+  ): TypedContractEvent<
+    SetContractEvent.InputTuple,
+    SetContractEvent.OutputTuple,
+    SetContractEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetConvexContract"
+  ): TypedContractEvent<
+    SetConvexContractEvent.InputTuple,
+    SetConvexContractEvent.OutputTuple,
+    SetConvexContractEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetDelegationSpace"
+  ): TypedContractEvent<
+    SetDelegationSpaceEvent.InputTuple,
+    SetDelegationSpaceEvent.OutputTuple,
+    SetDelegationSpaceEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetEmergencyMigration"
+  ): TypedContractEvent<
+    SetEmergencyMigrationEvent.InputTuple,
+    SetEmergencyMigrationEvent.OutputTuple,
+    SetEmergencyMigrationEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetFee"
+  ): TypedContractEvent<
+    SetFeeEvent.InputTuple,
+    SetFeeEvent.OutputTuple,
+    SetFeeEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetUpxCvxDeprecated"
+  ): TypedContractEvent<
+    SetUpxCvxDeprecatedEvent.InputTuple,
+    SetUpxCvxDeprecatedEvent.OutputTuple,
+    SetUpxCvxDeprecatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetVoteDelegate"
+  ): TypedContractEvent<
+    SetVoteDelegateEvent.InputTuple,
+    SetVoteDelegateEvent.OutputTuple,
+    SetVoteDelegateEvent.OutputObject
+  >;
+  getEvent(
+    key: "Stake"
+  ): TypedContractEvent<
+    StakeEvent.InputTuple,
+    StakeEvent.OutputTuple,
+    StakeEvent.OutputObject
+  >;
+  getEvent(
+    key: "Unpaused"
+  ): TypedContractEvent<
+    UnpausedEvent.InputTuple,
+    UnpausedEvent.OutputTuple,
+    UnpausedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Unstake"
+  ): TypedContractEvent<
+    UnstakeEvent.InputTuple,
+    UnstakeEvent.OutputTuple,
+    UnstakeEvent.OutputObject
+  >;
 
   filters: {
-    "AddDeveloper(address)"(developer?: null): AddDeveloperEventFilter;
-    AddDeveloper(developer?: null): AddDeveloperEventFilter;
-
-    "ClaimMiscRewards(uint256,tuple[])"(
-      timestamp?: null,
-      rewards?: null
-    ): ClaimMiscRewardsEventFilter;
-    ClaimMiscRewards(
-      timestamp?: null,
-      rewards?: null
-    ): ClaimMiscRewardsEventFilter;
-
-    "ClaimVotiumReward(address,uint256,uint256)"(
-      token?: string | null,
-      index?: null,
-      amount?: null
-    ): ClaimVotiumRewardEventFilter;
-    ClaimVotiumReward(
-      token?: string | null,
-      index?: null,
-      amount?: null
-    ): ClaimVotiumRewardEventFilter;
-
-    "ClearVoteDelegate()"(): ClearVoteDelegateEventFilter;
-    ClearVoteDelegate(): ClearVoteDelegateEventFilter;
-
-    "Deposit(uint256,address,bool,address)"(
-      assets?: null,
-      receiver?: string | null,
-      shouldCompound?: boolean | null,
-      developer?: string | null
-    ): DepositEventFilter;
-    Deposit(
-      assets?: null,
-      receiver?: string | null,
-      shouldCompound?: boolean | null,
-      developer?: string | null
-    ): DepositEventFilter;
-
-    "ExchangeFutures(uint256,uint256,address,uint8)"(
-      epoch?: BigNumberish | null,
-      amount?: null,
-      receiver?: string | null,
-      f?: null
-    ): ExchangeFuturesEventFilter;
-    ExchangeFutures(
-      epoch?: BigNumberish | null,
-      amount?: null,
-      receiver?: string | null,
-      f?: null
-    ): ExchangeFuturesEventFilter;
-
-    "ExecuteEmergencyMigration(address,address[])"(
-      recipient?: null,
-      tokens?: null
-    ): ExecuteEmergencyMigrationEventFilter;
-    ExecuteEmergencyMigration(
-      recipient?: null,
-      tokens?: null
-    ): ExecuteEmergencyMigrationEventFilter;
-
-    "InitializeEmergencyExecutor(address)"(
-      _emergencyExecutor?: null
-    ): InitializeEmergencyExecutorEventFilter;
-    InitializeEmergencyExecutor(
-      _emergencyExecutor?: null
-    ): InitializeEmergencyExecutorEventFilter;
-
-    "InitiateRedemptions(uint256[],uint8,uint256[],address)"(
-      lockIndexes?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): InitiateRedemptionsEventFilter;
-    InitiateRedemptions(
-      lockIndexes?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): InitiateRedemptionsEventFilter;
-
-    "MintFutures(uint256,uint8,uint256,address)"(
-      rounds?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): MintFuturesEventFilter;
-    MintFutures(
-      rounds?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): MintFuturesEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-
-    "Paused(address)"(account?: null): PausedEventFilter;
-    Paused(account?: null): PausedEventFilter;
-
-    "Redeem(uint256[],uint256[],address,bool)"(
-      unlockTimes?: null,
-      assets?: null,
-      receiver?: string | null,
-      legacy?: null
-    ): RedeemEventFilter;
-    Redeem(
-      unlockTimes?: null,
-      assets?: null,
-      receiver?: string | null,
-      legacy?: null
-    ): RedeemEventFilter;
-
-    "RedeemFuturesRewards(uint256,address,bytes32[])"(
-      epoch?: BigNumberish | null,
-      receiver?: string | null,
-      rewards?: null
-    ): RedeemFuturesRewardsEventFilter;
-    RedeemFuturesRewards(
-      epoch?: BigNumberish | null,
-      receiver?: string | null,
-      rewards?: null
-    ): RedeemFuturesRewardsEventFilter;
-
-    "RedeemSnapshotRewards(uint256,uint256[],address,uint256,uint256)"(
-      epoch?: BigNumberish | null,
-      rewardIndexes?: null,
-      receiver?: string | null,
-      snapshotBalance?: null,
-      snapshotSupply?: null
-    ): RedeemSnapshotRewardsEventFilter;
-    RedeemSnapshotRewards(
-      epoch?: BigNumberish | null,
-      rewardIndexes?: null,
-      receiver?: string | null,
-      snapshotBalance?: null,
-      snapshotSupply?: null
-    ): RedeemSnapshotRewardsEventFilter;
-
-    "RemoveDeveloper(address)"(developer?: null): RemoveDeveloperEventFilter;
-    RemoveDeveloper(developer?: null): RemoveDeveloperEventFilter;
-
-    "SetContract(uint8,address)"(
-      c?: BigNumberish | null,
-      contractAddress?: null
-    ): SetContractEventFilter;
-    SetContract(
-      c?: BigNumberish | null,
-      contractAddress?: null
-    ): SetContractEventFilter;
-
-    "SetConvexContract(uint8,address)"(
-      c?: null,
-      contractAddress?: null
-    ): SetConvexContractEventFilter;
-    SetConvexContract(
-      c?: null,
-      contractAddress?: null
-    ): SetConvexContractEventFilter;
-
-    "SetDelegationSpace(string,bool)"(
-      _delegationSpace?: null,
-      shouldClear?: null
-    ): SetDelegationSpaceEventFilter;
-    SetDelegationSpace(
-      _delegationSpace?: null,
-      shouldClear?: null
-    ): SetDelegationSpaceEventFilter;
-
-    "SetEmergencyMigration(tuple)"(
-      _emergencyMigration?: null
-    ): SetEmergencyMigrationEventFilter;
-    SetEmergencyMigration(
-      _emergencyMigration?: null
-    ): SetEmergencyMigrationEventFilter;
-
-    "SetFee(uint8,uint32)"(
-      f?: BigNumberish | null,
-      fee?: null
-    ): SetFeeEventFilter;
-    SetFee(f?: BigNumberish | null, fee?: null): SetFeeEventFilter;
-
-    "SetUpxCvxDeprecated(bool)"(state?: null): SetUpxCvxDeprecatedEventFilter;
-    SetUpxCvxDeprecated(state?: null): SetUpxCvxDeprecatedEventFilter;
-
-    "SetVoteDelegate(address)"(voteDelegate?: null): SetVoteDelegateEventFilter;
-    SetVoteDelegate(voteDelegate?: null): SetVoteDelegateEventFilter;
-
-    "Stake(uint256,uint8,uint256,address)"(
-      rounds?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): StakeEventFilter;
-    Stake(
-      rounds?: null,
-      f?: BigNumberish | null,
-      assets?: null,
-      receiver?: string | null
-    ): StakeEventFilter;
-
-    "Unpaused(address)"(account?: null): UnpausedEventFilter;
-    Unpaused(account?: null): UnpausedEventFilter;
-
-    "Unstake(uint256,uint256,address)"(
-      id?: null,
-      assets?: null,
-      receiver?: string | null
-    ): UnstakeEventFilter;
-    Unstake(
-      id?: null,
-      assets?: null,
-      receiver?: string | null
-    ): UnstakeEventFilter;
-  };
-
-  estimateGas: {
-    CVX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    EPOCH_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    FEE_MAX(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_REDEMPTION_TIME(overrides?: CallOverrides): Promise<BigNumber>;
-
-    addDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimMiscRewards(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    claimVotiumRewards(
-      votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    clearVoteDelegate(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    cvxDelegateRegistry(overrides?: CallOverrides): Promise<BigNumber>;
-
-    cvxLocker(overrides?: CallOverrides): Promise<BigNumber>;
-
-    delegationSpace(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      shouldCompound: boolean,
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    developers(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    emergencyExecutor(overrides?: CallOverrides): Promise<BigNumber>;
-
-    emergencyMigration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    exchangeFutures(
-      epoch: BigNumberish,
-      amount: BigNumberish,
-      receiver: string,
-      f: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    executeEmergencyMigration(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    fees(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    getCurrentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    initializeEmergencyExecutor(
-      _emergencyExecutor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    initiateRedemptions(
-      lockIndexes: BigNumberish[],
-      f: BigNumberish,
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    lock(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    outstandingRedemptions(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    paused(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pausedRelock(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    pendingLocks(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pirexFees(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pxCvx(overrides?: CallOverrides): Promise<BigNumber>;
-
-    redeem(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    redeemFuturesRewards(
-      epoch: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    redeemLegacy(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    redeemSnapshotRewards(
-      epoch: BigNumberish,
-      rewardIndexes: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    redemptions(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    removeDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    rpxCvx(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setConvexContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setDelegationSpace(
-      _delegationSpace: string,
-      shouldClear: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setEmergencyMigration(
-      _emergencyMigration: PirexCvx.EmergencyMigrationStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setFee(
-      f: BigNumberish,
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setPauseState(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setUpxCvxDeprecated(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setVoteDelegate(
-      voteDelegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    spxCvx(overrides?: CallOverrides): Promise<BigNumber>;
-
-    stake(
-      rounds: BigNumberish,
-      f: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    unionPirex(overrides?: CallOverrides): Promise<BigNumber>;
-
-    unlock(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    unstake(
-      id: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    upxCvx(overrides?: CallOverrides): Promise<BigNumber>;
-
-    upxCvxDeprecated(overrides?: CallOverrides): Promise<BigNumber>;
-
-    votiumMultiMerkleStash(overrides?: CallOverrides): Promise<BigNumber>;
-
-    vpxCvx(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    CVX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    EPOCH_DURATION(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FEE_DENOMINATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    FEE_MAX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_REDEMPTION_TIME(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    addDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimMiscRewards(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    claimVotiumRewards(
-      votiumRewards: IVotiumMultiMerkleStash.ClaimParamStruct[],
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    clearVoteDelegate(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    cvxDelegateRegistry(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    cvxLocker(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    delegationSpace(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    deposit(
-      assets: BigNumberish,
-      receiver: string,
-      shouldCompound: boolean,
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    developers(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    emergencyExecutor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    emergencyMigration(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    exchangeFutures(
-      epoch: BigNumberish,
-      amount: BigNumberish,
-      receiver: string,
-      f: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    executeEmergencyMigration(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    fees(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getCurrentEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    initializeEmergencyExecutor(
-      _emergencyExecutor: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    initiateRedemptions(
-      lockIndexes: BigNumberish[],
-      f: BigNumberish,
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    lock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    outstandingRedemptions(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pausedRelock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    pendingLocks(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pirexFees(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pxCvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    redeem(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    redeemFuturesRewards(
-      epoch: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    redeemLegacy(
-      unlockTimes: BigNumberish[],
-      assets: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    redeemSnapshotRewards(
-      epoch: BigNumberish,
-      rewardIndexes: BigNumberish[],
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    redemptions(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    removeDeveloper(
-      developer: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    rpxCvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setConvexContract(
-      c: BigNumberish,
-      contractAddress: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setDelegationSpace(
-      _delegationSpace: string,
-      shouldClear: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setEmergencyMigration(
-      _emergencyMigration: PirexCvx.EmergencyMigrationStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setFee(
-      f: BigNumberish,
-      fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setPauseState(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setUpxCvxDeprecated(
-      state: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setVoteDelegate(
-      voteDelegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    spxCvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    stake(
-      rounds: BigNumberish,
-      f: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    unionPirex(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    unlock(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    unstake(
-      id: BigNumberish,
-      assets: BigNumberish,
-      receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    upxCvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    upxCvxDeprecated(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    votiumMultiMerkleStash(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    vpxCvx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "AddDeveloper(address)": TypedContractEvent<
+      AddDeveloperEvent.InputTuple,
+      AddDeveloperEvent.OutputTuple,
+      AddDeveloperEvent.OutputObject
+    >;
+    AddDeveloper: TypedContractEvent<
+      AddDeveloperEvent.InputTuple,
+      AddDeveloperEvent.OutputTuple,
+      AddDeveloperEvent.OutputObject
+    >;
+
+    "ClaimMiscRewards(uint256,tuple[])": TypedContractEvent<
+      ClaimMiscRewardsEvent.InputTuple,
+      ClaimMiscRewardsEvent.OutputTuple,
+      ClaimMiscRewardsEvent.OutputObject
+    >;
+    ClaimMiscRewards: TypedContractEvent<
+      ClaimMiscRewardsEvent.InputTuple,
+      ClaimMiscRewardsEvent.OutputTuple,
+      ClaimMiscRewardsEvent.OutputObject
+    >;
+
+    "ClaimVotiumReward(address,uint256,uint256)": TypedContractEvent<
+      ClaimVotiumRewardEvent.InputTuple,
+      ClaimVotiumRewardEvent.OutputTuple,
+      ClaimVotiumRewardEvent.OutputObject
+    >;
+    ClaimVotiumReward: TypedContractEvent<
+      ClaimVotiumRewardEvent.InputTuple,
+      ClaimVotiumRewardEvent.OutputTuple,
+      ClaimVotiumRewardEvent.OutputObject
+    >;
+
+    "ClearVoteDelegate()": TypedContractEvent<
+      ClearVoteDelegateEvent.InputTuple,
+      ClearVoteDelegateEvent.OutputTuple,
+      ClearVoteDelegateEvent.OutputObject
+    >;
+    ClearVoteDelegate: TypedContractEvent<
+      ClearVoteDelegateEvent.InputTuple,
+      ClearVoteDelegateEvent.OutputTuple,
+      ClearVoteDelegateEvent.OutputObject
+    >;
+
+    "Deposit(uint256,address,bool,address)": TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+    Deposit: TypedContractEvent<
+      DepositEvent.InputTuple,
+      DepositEvent.OutputTuple,
+      DepositEvent.OutputObject
+    >;
+
+    "ExchangeFutures(uint256,uint256,address,uint8)": TypedContractEvent<
+      ExchangeFuturesEvent.InputTuple,
+      ExchangeFuturesEvent.OutputTuple,
+      ExchangeFuturesEvent.OutputObject
+    >;
+    ExchangeFutures: TypedContractEvent<
+      ExchangeFuturesEvent.InputTuple,
+      ExchangeFuturesEvent.OutputTuple,
+      ExchangeFuturesEvent.OutputObject
+    >;
+
+    "ExecuteEmergencyMigration(address,address[])": TypedContractEvent<
+      ExecuteEmergencyMigrationEvent.InputTuple,
+      ExecuteEmergencyMigrationEvent.OutputTuple,
+      ExecuteEmergencyMigrationEvent.OutputObject
+    >;
+    ExecuteEmergencyMigration: TypedContractEvent<
+      ExecuteEmergencyMigrationEvent.InputTuple,
+      ExecuteEmergencyMigrationEvent.OutputTuple,
+      ExecuteEmergencyMigrationEvent.OutputObject
+    >;
+
+    "InitializeEmergencyExecutor(address)": TypedContractEvent<
+      InitializeEmergencyExecutorEvent.InputTuple,
+      InitializeEmergencyExecutorEvent.OutputTuple,
+      InitializeEmergencyExecutorEvent.OutputObject
+    >;
+    InitializeEmergencyExecutor: TypedContractEvent<
+      InitializeEmergencyExecutorEvent.InputTuple,
+      InitializeEmergencyExecutorEvent.OutputTuple,
+      InitializeEmergencyExecutorEvent.OutputObject
+    >;
+
+    "InitiateRedemptions(uint256[],uint8,uint256[],address)": TypedContractEvent<
+      InitiateRedemptionsEvent.InputTuple,
+      InitiateRedemptionsEvent.OutputTuple,
+      InitiateRedemptionsEvent.OutputObject
+    >;
+    InitiateRedemptions: TypedContractEvent<
+      InitiateRedemptionsEvent.InputTuple,
+      InitiateRedemptionsEvent.OutputTuple,
+      InitiateRedemptionsEvent.OutputObject
+    >;
+
+    "MintFutures(uint256,uint8,uint256,address)": TypedContractEvent<
+      MintFuturesEvent.InputTuple,
+      MintFuturesEvent.OutputTuple,
+      MintFuturesEvent.OutputObject
+    >;
+    MintFutures: TypedContractEvent<
+      MintFuturesEvent.InputTuple,
+      MintFuturesEvent.OutputTuple,
+      MintFuturesEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "Paused(address)": TypedContractEvent<
+      PausedEvent.InputTuple,
+      PausedEvent.OutputTuple,
+      PausedEvent.OutputObject
+    >;
+    Paused: TypedContractEvent<
+      PausedEvent.InputTuple,
+      PausedEvent.OutputTuple,
+      PausedEvent.OutputObject
+    >;
+
+    "Redeem(uint256[],uint256[],address,bool)": TypedContractEvent<
+      RedeemEvent.InputTuple,
+      RedeemEvent.OutputTuple,
+      RedeemEvent.OutputObject
+    >;
+    Redeem: TypedContractEvent<
+      RedeemEvent.InputTuple,
+      RedeemEvent.OutputTuple,
+      RedeemEvent.OutputObject
+    >;
+
+    "RedeemFuturesRewards(uint256,address,bytes32[])": TypedContractEvent<
+      RedeemFuturesRewardsEvent.InputTuple,
+      RedeemFuturesRewardsEvent.OutputTuple,
+      RedeemFuturesRewardsEvent.OutputObject
+    >;
+    RedeemFuturesRewards: TypedContractEvent<
+      RedeemFuturesRewardsEvent.InputTuple,
+      RedeemFuturesRewardsEvent.OutputTuple,
+      RedeemFuturesRewardsEvent.OutputObject
+    >;
+
+    "RedeemSnapshotRewards(uint256,uint256[],address,uint256,uint256)": TypedContractEvent<
+      RedeemSnapshotRewardsEvent.InputTuple,
+      RedeemSnapshotRewardsEvent.OutputTuple,
+      RedeemSnapshotRewardsEvent.OutputObject
+    >;
+    RedeemSnapshotRewards: TypedContractEvent<
+      RedeemSnapshotRewardsEvent.InputTuple,
+      RedeemSnapshotRewardsEvent.OutputTuple,
+      RedeemSnapshotRewardsEvent.OutputObject
+    >;
+
+    "RemoveDeveloper(address)": TypedContractEvent<
+      RemoveDeveloperEvent.InputTuple,
+      RemoveDeveloperEvent.OutputTuple,
+      RemoveDeveloperEvent.OutputObject
+    >;
+    RemoveDeveloper: TypedContractEvent<
+      RemoveDeveloperEvent.InputTuple,
+      RemoveDeveloperEvent.OutputTuple,
+      RemoveDeveloperEvent.OutputObject
+    >;
+
+    "SetContract(uint8,address)": TypedContractEvent<
+      SetContractEvent.InputTuple,
+      SetContractEvent.OutputTuple,
+      SetContractEvent.OutputObject
+    >;
+    SetContract: TypedContractEvent<
+      SetContractEvent.InputTuple,
+      SetContractEvent.OutputTuple,
+      SetContractEvent.OutputObject
+    >;
+
+    "SetConvexContract(uint8,address)": TypedContractEvent<
+      SetConvexContractEvent.InputTuple,
+      SetConvexContractEvent.OutputTuple,
+      SetConvexContractEvent.OutputObject
+    >;
+    SetConvexContract: TypedContractEvent<
+      SetConvexContractEvent.InputTuple,
+      SetConvexContractEvent.OutputTuple,
+      SetConvexContractEvent.OutputObject
+    >;
+
+    "SetDelegationSpace(string,bool)": TypedContractEvent<
+      SetDelegationSpaceEvent.InputTuple,
+      SetDelegationSpaceEvent.OutputTuple,
+      SetDelegationSpaceEvent.OutputObject
+    >;
+    SetDelegationSpace: TypedContractEvent<
+      SetDelegationSpaceEvent.InputTuple,
+      SetDelegationSpaceEvent.OutputTuple,
+      SetDelegationSpaceEvent.OutputObject
+    >;
+
+    "SetEmergencyMigration(tuple)": TypedContractEvent<
+      SetEmergencyMigrationEvent.InputTuple,
+      SetEmergencyMigrationEvent.OutputTuple,
+      SetEmergencyMigrationEvent.OutputObject
+    >;
+    SetEmergencyMigration: TypedContractEvent<
+      SetEmergencyMigrationEvent.InputTuple,
+      SetEmergencyMigrationEvent.OutputTuple,
+      SetEmergencyMigrationEvent.OutputObject
+    >;
+
+    "SetFee(uint8,uint32)": TypedContractEvent<
+      SetFeeEvent.InputTuple,
+      SetFeeEvent.OutputTuple,
+      SetFeeEvent.OutputObject
+    >;
+    SetFee: TypedContractEvent<
+      SetFeeEvent.InputTuple,
+      SetFeeEvent.OutputTuple,
+      SetFeeEvent.OutputObject
+    >;
+
+    "SetUpxCvxDeprecated(bool)": TypedContractEvent<
+      SetUpxCvxDeprecatedEvent.InputTuple,
+      SetUpxCvxDeprecatedEvent.OutputTuple,
+      SetUpxCvxDeprecatedEvent.OutputObject
+    >;
+    SetUpxCvxDeprecated: TypedContractEvent<
+      SetUpxCvxDeprecatedEvent.InputTuple,
+      SetUpxCvxDeprecatedEvent.OutputTuple,
+      SetUpxCvxDeprecatedEvent.OutputObject
+    >;
+
+    "SetVoteDelegate(address)": TypedContractEvent<
+      SetVoteDelegateEvent.InputTuple,
+      SetVoteDelegateEvent.OutputTuple,
+      SetVoteDelegateEvent.OutputObject
+    >;
+    SetVoteDelegate: TypedContractEvent<
+      SetVoteDelegateEvent.InputTuple,
+      SetVoteDelegateEvent.OutputTuple,
+      SetVoteDelegateEvent.OutputObject
+    >;
+
+    "Stake(uint256,uint8,uint256,address)": TypedContractEvent<
+      StakeEvent.InputTuple,
+      StakeEvent.OutputTuple,
+      StakeEvent.OutputObject
+    >;
+    Stake: TypedContractEvent<
+      StakeEvent.InputTuple,
+      StakeEvent.OutputTuple,
+      StakeEvent.OutputObject
+    >;
+
+    "Unpaused(address)": TypedContractEvent<
+      UnpausedEvent.InputTuple,
+      UnpausedEvent.OutputTuple,
+      UnpausedEvent.OutputObject
+    >;
+    Unpaused: TypedContractEvent<
+      UnpausedEvent.InputTuple,
+      UnpausedEvent.OutputTuple,
+      UnpausedEvent.OutputObject
+    >;
+
+    "Unstake(uint256,uint256,address)": TypedContractEvent<
+      UnstakeEvent.InputTuple,
+      UnstakeEvent.OutputTuple,
+      UnstakeEvent.OutputObject
+    >;
+    Unstake: TypedContractEvent<
+      UnstakeEvent.InputTuple,
+      UnstakeEvent.OutputTuple,
+      UnstakeEvent.OutputObject
+    >;
   };
 }

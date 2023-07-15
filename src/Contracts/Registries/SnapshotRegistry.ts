@@ -3,38 +3,33 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface SnapshotRegistryInterface extends utils.Interface {
-  functions: {
-    "clearDelegate(bytes32)": FunctionFragment;
-    "delegation(address,bytes32)": FunctionFragment;
-    "setDelegate(bytes32,address)": FunctionFragment;
-  };
-
+export interface SnapshotRegistryInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic: "clearDelegate" | "delegation" | "setDelegate"
+    nameOrSignature: "clearDelegate" | "delegation" | "setDelegate"
   ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic: "ClearDelegate" | "SetDelegate"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "clearDelegate",
@@ -42,11 +37,11 @@ export interface SnapshotRegistryInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "delegation",
-    values: [string, BytesLike]
+    values: [AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setDelegate",
-    values: [BytesLike, string]
+    values: [BytesLike, AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -58,177 +53,159 @@ export interface SnapshotRegistryInterface extends utils.Interface {
     functionFragment: "setDelegate",
     data: BytesLike
   ): Result;
-
-  events: {
-    "ClearDelegate(address,bytes32,address)": EventFragment;
-    "SetDelegate(address,bytes32,address)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "ClearDelegate"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetDelegate"): EventFragment;
 }
 
-export interface ClearDelegateEventObject {
-  delegator: string;
-  id: string;
-  delegate: string;
+export namespace ClearDelegateEvent {
+  export type InputTuple = [
+    delegator: AddressLike,
+    id: BytesLike,
+    delegate: AddressLike
+  ];
+  export type OutputTuple = [delegator: string, id: string, delegate: string];
+  export interface OutputObject {
+    delegator: string;
+    id: string;
+    delegate: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ClearDelegateEvent = TypedEvent<
-  [string, string, string],
-  ClearDelegateEventObject
->;
 
-export type ClearDelegateEventFilter = TypedEventFilter<ClearDelegateEvent>;
-
-export interface SetDelegateEventObject {
-  delegator: string;
-  id: string;
-  delegate: string;
+export namespace SetDelegateEvent {
+  export type InputTuple = [
+    delegator: AddressLike,
+    id: BytesLike,
+    delegate: AddressLike
+  ];
+  export type OutputTuple = [delegator: string, id: string, delegate: string];
+  export interface OutputObject {
+    delegator: string;
+    id: string;
+    delegate: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type SetDelegateEvent = TypedEvent<
-  [string, string, string],
-  SetDelegateEventObject
->;
-
-export type SetDelegateEventFilter = TypedEventFilter<SetDelegateEvent>;
 
 export interface SnapshotRegistry extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): SnapshotRegistry;
+  waitForDeployment(): Promise<this>;
 
   interface: SnapshotRegistryInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    clearDelegate(
-      id: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    delegation(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    setDelegate(
-      id: BytesLike,
-      delegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-  };
+  clearDelegate: TypedContractMethod<[id: BytesLike], [void], "nonpayable">;
 
-  clearDelegate(
-    id: BytesLike,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  delegation: TypedContractMethod<
+    [arg0: AddressLike, arg1: BytesLike],
+    [string],
+    "view"
+  >;
 
-  delegation(
-    arg0: string,
-    arg1: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  setDelegate: TypedContractMethod<
+    [id: BytesLike, delegate: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-  setDelegate(
-    id: BytesLike,
-    delegate: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  callStatic: {
-    clearDelegate(id: BytesLike, overrides?: CallOverrides): Promise<void>;
+  getFunction(
+    nameOrSignature: "clearDelegate"
+  ): TypedContractMethod<[id: BytesLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "delegation"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: BytesLike],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "setDelegate"
+  ): TypedContractMethod<
+    [id: BytesLike, delegate: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    delegation(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    setDelegate(
-      id: BytesLike,
-      delegate: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  getEvent(
+    key: "ClearDelegate"
+  ): TypedContractEvent<
+    ClearDelegateEvent.InputTuple,
+    ClearDelegateEvent.OutputTuple,
+    ClearDelegateEvent.OutputObject
+  >;
+  getEvent(
+    key: "SetDelegate"
+  ): TypedContractEvent<
+    SetDelegateEvent.InputTuple,
+    SetDelegateEvent.OutputTuple,
+    SetDelegateEvent.OutputObject
+  >;
 
   filters: {
-    "ClearDelegate(address,bytes32,address)"(
-      delegator?: string | null,
-      id?: BytesLike | null,
-      delegate?: string | null
-    ): ClearDelegateEventFilter;
-    ClearDelegate(
-      delegator?: string | null,
-      id?: BytesLike | null,
-      delegate?: string | null
-    ): ClearDelegateEventFilter;
+    "ClearDelegate(address,bytes32,address)": TypedContractEvent<
+      ClearDelegateEvent.InputTuple,
+      ClearDelegateEvent.OutputTuple,
+      ClearDelegateEvent.OutputObject
+    >;
+    ClearDelegate: TypedContractEvent<
+      ClearDelegateEvent.InputTuple,
+      ClearDelegateEvent.OutputTuple,
+      ClearDelegateEvent.OutputObject
+    >;
 
-    "SetDelegate(address,bytes32,address)"(
-      delegator?: string | null,
-      id?: BytesLike | null,
-      delegate?: string | null
-    ): SetDelegateEventFilter;
-    SetDelegate(
-      delegator?: string | null,
-      id?: BytesLike | null,
-      delegate?: string | null
-    ): SetDelegateEventFilter;
-  };
-
-  estimateGas: {
-    clearDelegate(
-      id: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    delegation(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    setDelegate(
-      id: BytesLike,
-      delegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    clearDelegate(
-      id: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    delegation(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    setDelegate(
-      id: BytesLike,
-      delegate: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
+    "SetDelegate(address,bytes32,address)": TypedContractEvent<
+      SetDelegateEvent.InputTuple,
+      SetDelegateEvent.OutputTuple,
+      SetDelegateEvent.OutputObject
+    >;
+    SetDelegate: TypedContractEvent<
+      SetDelegateEvent.InputTuple,
+      SetDelegateEvent.OutputTuple,
+      SetDelegateEvent.OutputObject
+    >;
   };
 }

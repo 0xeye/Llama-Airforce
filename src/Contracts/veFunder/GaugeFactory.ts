@@ -3,48 +3,40 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface GaugeFactoryInterface extends utils.Interface {
-  functions: {
-    "deploy_gauge(address,uint256)": FunctionFragment;
-    "implementation()": FunctionFragment;
-    "get_gauge_count()": FunctionFragment;
-    "get_gauge_by_idx(uint256)": FunctionFragment;
-  };
-
+export interface GaugeFactoryInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "deploy_gauge"
       | "implementation"
       | "get_gauge_count"
       | "get_gauge_by_idx"
   ): FunctionFragment;
 
+  getEvent(nameOrSignatureOrTopic: "NewGauge"): EventFragment;
+
   encodeFunctionData(
     functionFragment: "deploy_gauge",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "implementation",
@@ -75,145 +67,124 @@ export interface GaugeFactoryInterface extends utils.Interface {
     functionFragment: "get_gauge_by_idx",
     data: BytesLike
   ): Result;
-
-  events: {
-    "NewGauge(address,address,uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "NewGauge"): EventFragment;
 }
 
-export interface NewGaugeEventObject {
-  _instance: string;
-  _receiver: string;
-  _max_emissions: BigNumber;
+export namespace NewGaugeEvent {
+  export type InputTuple = [
+    _instance: AddressLike,
+    _receiver: AddressLike,
+    _max_emissions: BigNumberish
+  ];
+  export type OutputTuple = [
+    _instance: string,
+    _receiver: string,
+    _max_emissions: bigint
+  ];
+  export interface OutputObject {
+    _instance: string;
+    _receiver: string;
+    _max_emissions: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type NewGaugeEvent = TypedEvent<
-  [string, string, BigNumber],
-  NewGaugeEventObject
->;
-
-export type NewGaugeEventFilter = TypedEventFilter<NewGaugeEvent>;
 
 export interface GaugeFactory extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): GaugeFactory;
+  waitForDeployment(): Promise<this>;
 
   interface: GaugeFactoryInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    deploy_gauge(
-      _receiver: string,
-      _max_emissions: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    implementation(overrides?: CallOverrides): Promise<[string]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    get_gauge_count(overrides?: CallOverrides): Promise<[BigNumber]>;
+  deploy_gauge: TypedContractMethod<
+    [_receiver: AddressLike, _max_emissions: BigNumberish],
+    [string],
+    "nonpayable"
+  >;
 
-    get_gauge_by_idx(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-  };
+  implementation: TypedContractMethod<[], [string], "view">;
 
-  deploy_gauge(
-    _receiver: string,
-    _max_emissions: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  get_gauge_count: TypedContractMethod<[], [bigint], "view">;
 
-  implementation(overrides?: CallOverrides): Promise<string>;
+  get_gauge_by_idx: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-  get_gauge_count(overrides?: CallOverrides): Promise<BigNumber>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  get_gauge_by_idx(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  getFunction(
+    nameOrSignature: "deploy_gauge"
+  ): TypedContractMethod<
+    [_receiver: AddressLike, _max_emissions: BigNumberish],
+    [string],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "implementation"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "get_gauge_count"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "get_gauge_by_idx"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-  callStatic: {
-    deploy_gauge(
-      _receiver: string,
-      _max_emissions: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    implementation(overrides?: CallOverrides): Promise<string>;
-
-    get_gauge_count(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_gauge_by_idx(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-  };
+  getEvent(
+    key: "NewGauge"
+  ): TypedContractEvent<
+    NewGaugeEvent.InputTuple,
+    NewGaugeEvent.OutputTuple,
+    NewGaugeEvent.OutputObject
+  >;
 
   filters: {
-    "NewGauge(address,address,uint256)"(
-      _instance?: string | null,
-      _receiver?: string | null,
-      _max_emissions?: null
-    ): NewGaugeEventFilter;
-    NewGauge(
-      _instance?: string | null,
-      _receiver?: string | null,
-      _max_emissions?: null
-    ): NewGaugeEventFilter;
-  };
-
-  estimateGas: {
-    deploy_gauge(
-      _receiver: string,
-      _max_emissions: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    implementation(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_gauge_count(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_gauge_by_idx(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    deploy_gauge(
-      _receiver: string,
-      _max_emissions: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    implementation(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    get_gauge_count(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    get_gauge_by_idx(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "NewGauge(address,address,uint256)": TypedContractEvent<
+      NewGaugeEvent.InputTuple,
+      NewGaugeEvent.OutputTuple,
+      NewGaugeEvent.OutputObject
+    >;
+    NewGauge: TypedContractEvent<
+      NewGaugeEvent.InputTuple,
+      NewGaugeEvent.OutputTuple,
+      NewGaugeEvent.OutputObject
+    >;
   };
 }

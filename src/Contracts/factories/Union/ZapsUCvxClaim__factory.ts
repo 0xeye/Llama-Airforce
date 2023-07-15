@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   ZapsUCvxClaim,
   ZapsUCvxClaimInterface,
@@ -326,12 +325,12 @@ const _abi = [
 export class ZapsUCvxClaim__factory {
   static readonly abi = _abi;
   static createInterface(): ZapsUCvxClaimInterface {
-    return new utils.Interface(_abi) as ZapsUCvxClaimInterface;
+    return new Interface(_abi) as ZapsUCvxClaimInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): ZapsUCvxClaim {
-    return new Contract(address, _abi, signerOrProvider) as ZapsUCvxClaim;
+    return new Contract(address, _abi, runner) as unknown as ZapsUCvxClaim;
   }
 }

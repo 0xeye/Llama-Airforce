@@ -3,89 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface CvxCrvFactoryPoolInterface extends utils.Interface {
-  functions: {
-    "initialize(string,string,address[4],uint256[4],uint256,uint256)": FunctionFragment;
-    "decimals()": FunctionFragment;
-    "transfer(address,uint256)": FunctionFragment;
-    "transferFrom(address,address,uint256)": FunctionFragment;
-    "approve(address,uint256)": FunctionFragment;
-    "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
-    "last_price()": FunctionFragment;
-    "ema_price()": FunctionFragment;
-    "get_balances()": FunctionFragment;
-    "admin_fee()": FunctionFragment;
-    "A()": FunctionFragment;
-    "A_precise()": FunctionFragment;
-    "get_p()": FunctionFragment;
-    "price_oracle()": FunctionFragment;
-    "get_virtual_price()": FunctionFragment;
-    "calc_token_amount(uint256[2],bool)": FunctionFragment;
-    "add_liquidity(uint256[2],uint256)": FunctionFragment;
-    "add_liquidity(uint256[2],uint256,address)": FunctionFragment;
-    "get_dy(int128,int128,uint256)": FunctionFragment;
-    "exchange(int128,int128,uint256,uint256)": FunctionFragment;
-    "exchange(int128,int128,uint256,uint256,address)": FunctionFragment;
-    "remove_liquidity(uint256,uint256[2])": FunctionFragment;
-    "remove_liquidity(uint256,uint256[2],address)": FunctionFragment;
-    "remove_liquidity_imbalance(uint256[2],uint256)": FunctionFragment;
-    "remove_liquidity_imbalance(uint256[2],uint256,address)": FunctionFragment;
-    "calc_withdraw_one_coin(uint256,int128)": FunctionFragment;
-    "remove_liquidity_one_coin(uint256,int128,uint256)": FunctionFragment;
-    "remove_liquidity_one_coin(uint256,int128,uint256,address)": FunctionFragment;
-    "ramp_A(uint256,uint256)": FunctionFragment;
-    "stop_ramp_A()": FunctionFragment;
-    "set_ma_exp_time(uint256)": FunctionFragment;
-    "admin_balances(uint256)": FunctionFragment;
-    "commit_new_fee(uint256)": FunctionFragment;
-    "apply_new_fee()": FunctionFragment;
-    "withdraw_admin_fees()": FunctionFragment;
-    "version()": FunctionFragment;
-    "coins(uint256)": FunctionFragment;
-    "balances(uint256)": FunctionFragment;
-    "fee()": FunctionFragment;
-    "future_fee()": FunctionFragment;
-    "admin_action_deadline()": FunctionFragment;
-    "initial_A()": FunctionFragment;
-    "future_A()": FunctionFragment;
-    "initial_A_time()": FunctionFragment;
-    "future_A_time()": FunctionFragment;
-    "name()": FunctionFragment;
-    "symbol()": FunctionFragment;
-    "balanceOf(address)": FunctionFragment;
-    "allowance(address,address)": FunctionFragment;
-    "totalSupply()": FunctionFragment;
-    "DOMAIN_SEPARATOR()": FunctionFragment;
-    "nonces(address)": FunctionFragment;
-    "ma_exp_time()": FunctionFragment;
-    "ma_last_time()": FunctionFragment;
-  };
-
+export interface CvxCrvFactoryPoolInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "initialize"
       | "decimals"
       | "transfer"
@@ -142,12 +82,27 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
       | "ma_last_time"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "Transfer"
+      | "Approval"
+      | "TokenExchange"
+      | "AddLiquidity"
+      | "RemoveLiquidity"
+      | "RemoveLiquidityOne"
+      | "RemoveLiquidityImbalance"
+      | "RampA"
+      | "StopRampA"
+      | "CommitNewFee"
+      | "ApplyNewFee"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "initialize",
     values: [
       string,
       string,
-      [string, string, string, string],
+      [AddressLike, AddressLike, AddressLike, AddressLike],
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       BigNumberish,
       BigNumberish
@@ -156,21 +111,21 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom",
-    values: [string, string, BigNumberish]
+    values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [string, BigNumberish]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "permit",
     values: [
-      string,
-      string,
+      AddressLike,
+      AddressLike,
       BigNumberish,
       BigNumberish,
       BigNumberish,
@@ -209,7 +164,7 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "add_liquidity(uint256[2],uint256,address)",
-    values: [[BigNumberish, BigNumberish], BigNumberish, string]
+    values: [[BigNumberish, BigNumberish], BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "get_dy",
@@ -221,7 +176,13 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "exchange(int128,int128,uint256,uint256,address)",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, string]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      AddressLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "remove_liquidity(uint256,uint256[2])",
@@ -229,7 +190,7 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "remove_liquidity(uint256,uint256[2],address)",
-    values: [BigNumberish, [BigNumberish, BigNumberish], string]
+    values: [BigNumberish, [BigNumberish, BigNumberish], AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "remove_liquidity_imbalance(uint256[2],uint256)",
@@ -237,7 +198,7 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "remove_liquidity_imbalance(uint256[2],uint256,address)",
-    values: [[BigNumberish, BigNumberish], BigNumberish, string]
+    values: [[BigNumberish, BigNumberish], BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "calc_withdraw_one_coin",
@@ -249,7 +210,7 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "remove_liquidity_one_coin(uint256,int128,uint256,address)",
-    values: [BigNumberish, BigNumberish, BigNumberish, string]
+    values: [BigNumberish, BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "ramp_A",
@@ -306,10 +267,13 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
-  encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "balanceOf",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "allowance",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
@@ -319,7 +283,7 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
     functionFragment: "DOMAIN_SEPARATOR",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "nonces", values: [string]): string;
+  encodeFunctionData(functionFragment: "nonces", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "ma_exp_time",
     values?: undefined
@@ -470,212 +434,288 @@ export interface CvxCrvFactoryPoolInterface extends utils.Interface {
     functionFragment: "ma_last_time",
     data: BytesLike
   ): Result;
-
-  events: {
-    "Transfer(address,address,uint256)": EventFragment;
-    "Approval(address,address,uint256)": EventFragment;
-    "TokenExchange(address,int128,uint256,int128,uint256)": EventFragment;
-    "AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)": EventFragment;
-    "RemoveLiquidity(address,uint256[2],uint256[2],uint256)": EventFragment;
-    "RemoveLiquidityOne(address,uint256,uint256,uint256)": EventFragment;
-    "RemoveLiquidityImbalance(address,uint256[2],uint256[2],uint256,uint256)": EventFragment;
-    "RampA(uint256,uint256,uint256,uint256)": EventFragment;
-    "StopRampA(uint256,uint256)": EventFragment;
-    "CommitNewFee(uint256)": EventFragment;
-    "ApplyNewFee(uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenExchange"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "AddLiquidity"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RemoveLiquidity"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RemoveLiquidityOne"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RemoveLiquidityImbalance"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RampA"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "StopRampA"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "CommitNewFee"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ApplyNewFee"): EventFragment;
 }
 
-export interface TransferEventObject {
-  sender: string;
-  receiver: string;
-  value: BigNumber;
+export namespace TransferEvent {
+  export type InputTuple = [
+    sender: AddressLike,
+    receiver: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [sender: string, receiver: string, value: bigint];
+  export interface OutputObject {
+    sender: string;
+    receiver: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber],
-  TransferEventObject
->;
 
-export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export interface ApprovalEventObject {
-  owner: string;
-  spender: string;
-  value: BigNumber;
+export namespace ApprovalEvent {
+  export type InputTuple = [
+    owner: AddressLike,
+    spender: AddressLike,
+    value: BigNumberish
+  ];
+  export type OutputTuple = [owner: string, spender: string, value: bigint];
+  export interface OutputObject {
+    owner: string;
+    spender: string;
+    value: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber],
-  ApprovalEventObject
->;
 
-export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
-
-export interface TokenExchangeEventObject {
-  buyer: string;
-  sold_id: BigNumber;
-  tokens_sold: BigNumber;
-  bought_id: BigNumber;
-  tokens_bought: BigNumber;
+export namespace TokenExchangeEvent {
+  export type InputTuple = [
+    buyer: AddressLike,
+    sold_id: BigNumberish,
+    tokens_sold: BigNumberish,
+    bought_id: BigNumberish,
+    tokens_bought: BigNumberish
+  ];
+  export type OutputTuple = [
+    buyer: string,
+    sold_id: bigint,
+    tokens_sold: bigint,
+    bought_id: bigint,
+    tokens_bought: bigint
+  ];
+  export interface OutputObject {
+    buyer: string;
+    sold_id: bigint;
+    tokens_sold: bigint;
+    bought_id: bigint;
+    tokens_bought: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenExchangeEvent = TypedEvent<
-  [string, BigNumber, BigNumber, BigNumber, BigNumber],
-  TokenExchangeEventObject
->;
 
-export type TokenExchangeEventFilter = TypedEventFilter<TokenExchangeEvent>;
-
-export interface AddLiquidityEventObject {
-  provider: string;
-  token_amounts: [BigNumber, BigNumber];
-  fees: [BigNumber, BigNumber];
-  invariant: BigNumber;
-  token_supply: BigNumber;
+export namespace AddLiquidityEvent {
+  export type InputTuple = [
+    provider: AddressLike,
+    token_amounts: [BigNumberish, BigNumberish],
+    fees: [BigNumberish, BigNumberish],
+    invariant: BigNumberish,
+    token_supply: BigNumberish
+  ];
+  export type OutputTuple = [
+    provider: string,
+    token_amounts: [bigint, bigint],
+    fees: [bigint, bigint],
+    invariant: bigint,
+    token_supply: bigint
+  ];
+  export interface OutputObject {
+    provider: string;
+    token_amounts: [bigint, bigint];
+    fees: [bigint, bigint];
+    invariant: bigint;
+    token_supply: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type AddLiquidityEvent = TypedEvent<
-  [
-    string,
-    [BigNumber, BigNumber],
-    [BigNumber, BigNumber],
-    BigNumber,
-    BigNumber
-  ],
-  AddLiquidityEventObject
->;
 
-export type AddLiquidityEventFilter = TypedEventFilter<AddLiquidityEvent>;
-
-export interface RemoveLiquidityEventObject {
-  provider: string;
-  token_amounts: [BigNumber, BigNumber];
-  fees: [BigNumber, BigNumber];
-  token_supply: BigNumber;
+export namespace RemoveLiquidityEvent {
+  export type InputTuple = [
+    provider: AddressLike,
+    token_amounts: [BigNumberish, BigNumberish],
+    fees: [BigNumberish, BigNumberish],
+    token_supply: BigNumberish
+  ];
+  export type OutputTuple = [
+    provider: string,
+    token_amounts: [bigint, bigint],
+    fees: [bigint, bigint],
+    token_supply: bigint
+  ];
+  export interface OutputObject {
+    provider: string;
+    token_amounts: [bigint, bigint];
+    fees: [bigint, bigint];
+    token_supply: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RemoveLiquidityEvent = TypedEvent<
-  [string, [BigNumber, BigNumber], [BigNumber, BigNumber], BigNumber],
-  RemoveLiquidityEventObject
->;
 
-export type RemoveLiquidityEventFilter = TypedEventFilter<RemoveLiquidityEvent>;
-
-export interface RemoveLiquidityOneEventObject {
-  provider: string;
-  token_amount: BigNumber;
-  coin_amount: BigNumber;
-  token_supply: BigNumber;
+export namespace RemoveLiquidityOneEvent {
+  export type InputTuple = [
+    provider: AddressLike,
+    token_amount: BigNumberish,
+    coin_amount: BigNumberish,
+    token_supply: BigNumberish
+  ];
+  export type OutputTuple = [
+    provider: string,
+    token_amount: bigint,
+    coin_amount: bigint,
+    token_supply: bigint
+  ];
+  export interface OutputObject {
+    provider: string;
+    token_amount: bigint;
+    coin_amount: bigint;
+    token_supply: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RemoveLiquidityOneEvent = TypedEvent<
-  [string, BigNumber, BigNumber, BigNumber],
-  RemoveLiquidityOneEventObject
->;
 
-export type RemoveLiquidityOneEventFilter =
-  TypedEventFilter<RemoveLiquidityOneEvent>;
-
-export interface RemoveLiquidityImbalanceEventObject {
-  provider: string;
-  token_amounts: [BigNumber, BigNumber];
-  fees: [BigNumber, BigNumber];
-  invariant: BigNumber;
-  token_supply: BigNumber;
+export namespace RemoveLiquidityImbalanceEvent {
+  export type InputTuple = [
+    provider: AddressLike,
+    token_amounts: [BigNumberish, BigNumberish],
+    fees: [BigNumberish, BigNumberish],
+    invariant: BigNumberish,
+    token_supply: BigNumberish
+  ];
+  export type OutputTuple = [
+    provider: string,
+    token_amounts: [bigint, bigint],
+    fees: [bigint, bigint],
+    invariant: bigint,
+    token_supply: bigint
+  ];
+  export interface OutputObject {
+    provider: string;
+    token_amounts: [bigint, bigint];
+    fees: [bigint, bigint];
+    invariant: bigint;
+    token_supply: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RemoveLiquidityImbalanceEvent = TypedEvent<
-  [
-    string,
-    [BigNumber, BigNumber],
-    [BigNumber, BigNumber],
-    BigNumber,
-    BigNumber
-  ],
-  RemoveLiquidityImbalanceEventObject
->;
 
-export type RemoveLiquidityImbalanceEventFilter =
-  TypedEventFilter<RemoveLiquidityImbalanceEvent>;
-
-export interface RampAEventObject {
-  old_A: BigNumber;
-  new_A: BigNumber;
-  initial_time: BigNumber;
-  future_time: BigNumber;
+export namespace RampAEvent {
+  export type InputTuple = [
+    old_A: BigNumberish,
+    new_A: BigNumberish,
+    initial_time: BigNumberish,
+    future_time: BigNumberish
+  ];
+  export type OutputTuple = [
+    old_A: bigint,
+    new_A: bigint,
+    initial_time: bigint,
+    future_time: bigint
+  ];
+  export interface OutputObject {
+    old_A: bigint;
+    new_A: bigint;
+    initial_time: bigint;
+    future_time: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type RampAEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber, BigNumber],
-  RampAEventObject
->;
 
-export type RampAEventFilter = TypedEventFilter<RampAEvent>;
-
-export interface StopRampAEventObject {
-  A: BigNumber;
-  t: BigNumber;
+export namespace StopRampAEvent {
+  export type InputTuple = [A: BigNumberish, t: BigNumberish];
+  export type OutputTuple = [A: bigint, t: bigint];
+  export interface OutputObject {
+    A: bigint;
+    t: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type StopRampAEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  StopRampAEventObject
->;
 
-export type StopRampAEventFilter = TypedEventFilter<StopRampAEvent>;
-
-export interface CommitNewFeeEventObject {
-  new_fee: BigNumber;
+export namespace CommitNewFeeEvent {
+  export type InputTuple = [new_fee: BigNumberish];
+  export type OutputTuple = [new_fee: bigint];
+  export interface OutputObject {
+    new_fee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type CommitNewFeeEvent = TypedEvent<
-  [BigNumber],
-  CommitNewFeeEventObject
->;
 
-export type CommitNewFeeEventFilter = TypedEventFilter<CommitNewFeeEvent>;
-
-export interface ApplyNewFeeEventObject {
-  fee: BigNumber;
+export namespace ApplyNewFeeEvent {
+  export type InputTuple = [fee: BigNumberish];
+  export type OutputTuple = [fee: bigint];
+  export interface OutputObject {
+    fee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ApplyNewFeeEvent = TypedEvent<[BigNumber], ApplyNewFeeEventObject>;
-
-export type ApplyNewFeeEventFilter = TypedEventFilter<ApplyNewFeeEvent>;
 
 export interface CvxCrvFactoryPool extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): CvxCrvFactoryPool;
+  waitForDeployment(): Promise<this>;
 
   interface: CvxCrvFactoryPoolInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    initialize(
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
+
+  initialize: TypedContractMethod<
+    [
       _name: string,
       _symbol: string,
-      _coins: [string, string, string, string],
+      _coins: [AddressLike, AddressLike, AddressLike, AddressLike],
       _rate_multipliers: [
         BigNumberish,
         BigNumberish,
@@ -683,459 +723,249 @@ export interface CvxCrvFactoryPool extends BaseContract {
         BigNumberish
       ],
       _A: BigNumberish,
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _fee: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-    decimals(overrides?: CallOverrides): Promise<[number]>;
+  decimals: TypedContractMethod<[], [bigint], "view">;
 
-    transfer(
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  transfer: TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    transferFrom(
-      _from: string,
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  transferFrom: TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    approve(
-      _spender: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  approve: TypedContractMethod<
+    [_spender: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
 
-    permit(
-      _owner: string,
-      _spender: string,
+  permit: TypedContractMethod<
+    [
+      _owner: AddressLike,
+      _spender: AddressLike,
       _value: BigNumberish,
       _deadline: BigNumberish,
       _v: BigNumberish,
       _r: BytesLike,
-      _s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _s: BytesLike
+    ],
+    [boolean],
+    "nonpayable"
+  >;
 
-    last_price(overrides?: CallOverrides): Promise<[BigNumber]>;
+  last_price: TypedContractMethod<[], [bigint], "view">;
 
-    ema_price(overrides?: CallOverrides): Promise<[BigNumber]>;
+  ema_price: TypedContractMethod<[], [bigint], "view">;
 
-    get_balances(overrides?: CallOverrides): Promise<[[BigNumber, BigNumber]]>;
+  get_balances: TypedContractMethod<[], [[bigint, bigint]], "view">;
 
-    admin_fee(overrides?: CallOverrides): Promise<[BigNumber]>;
+  admin_fee: TypedContractMethod<[], [bigint], "view">;
 
-    A(overrides?: CallOverrides): Promise<[BigNumber]>;
+  A: TypedContractMethod<[], [bigint], "view">;
 
-    A_precise(overrides?: CallOverrides): Promise<[BigNumber]>;
+  A_precise: TypedContractMethod<[], [bigint], "view">;
 
-    get_p(overrides?: CallOverrides): Promise<[BigNumber]>;
+  get_p: TypedContractMethod<[], [bigint], "view">;
 
-    price_oracle(overrides?: CallOverrides): Promise<[BigNumber]>;
+  price_oracle: TypedContractMethod<[], [bigint], "view">;
 
-    get_virtual_price(overrides?: CallOverrides): Promise<[BigNumber]>;
+  get_virtual_price: TypedContractMethod<[], [bigint], "view">;
 
-    calc_token_amount(
-      _amounts: [BigNumberish, BigNumberish],
-      _is_deposit: boolean,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  calc_token_amount: TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _is_deposit: boolean],
+    [bigint],
+    "view"
+  >;
 
-    "add_liquidity(uint256[2],uint256)"(
+  "add_liquidity(uint256[2],uint256)": TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _min_mint_amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  "add_liquidity(uint256[2],uint256,address)": TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _min_mint_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "add_liquidity(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  get_dy: TypedContractMethod<
+    [i: BigNumberish, j: BigNumberish, dx: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    get_dy(
+  "exchange(int128,int128,uint256,uint256)": TypedContractMethod<
+    [
       i: BigNumberish,
       j: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+      _dx: BigNumberish,
+      _min_dy: BigNumberish
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "exchange(int128,int128,uint256,uint256)"(
+  "exchange(int128,int128,uint256,uint256,address)": TypedContractMethod<
+    [
       i: BigNumberish,
       j: BigNumberish,
       _dx: BigNumberish,
       _min_dy: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "exchange(int128,int128,uint256,uint256,address)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "remove_liquidity(uint256,uint256[2])": TypedContractMethod<
+    [_burn_amount: BigNumberish, _min_amounts: [BigNumberish, BigNumberish]],
+    [[bigint, bigint]],
+    "nonpayable"
+  >;
 
-    "remove_liquidity(uint256,uint256[2])"(
+  "remove_liquidity(uint256,uint256[2],address)": TypedContractMethod<
+    [
       _burn_amount: BigNumberish,
       _min_amounts: [BigNumberish, BigNumberish],
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _receiver: AddressLike
+    ],
+    [[bigint, bigint]],
+    "nonpayable"
+  >;
 
-    "remove_liquidity(uint256,uint256[2],address)"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  "remove_liquidity_imbalance(uint256[2],uint256)": TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _max_burn_amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "remove_liquidity_imbalance(uint256[2],uint256)"(
+  "remove_liquidity_imbalance(uint256[2],uint256,address)": TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _max_burn_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "remove_liquidity_imbalance(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  calc_withdraw_one_coin: TypedContractMethod<
+    [_burn_amount: BigNumberish, i: BigNumberish],
+    [bigint],
+    "view"
+  >;
 
-    calc_withdraw_one_coin(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  "remove_liquidity_one_coin(uint256,int128,uint256)": TypedContractMethod<
+    [_burn_amount: BigNumberish, i: BigNumberish, _min_received: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "remove_liquidity_one_coin(uint256,int128,uint256)"(
+  "remove_liquidity_one_coin(uint256,int128,uint256,address)": TypedContractMethod<
+    [
       _burn_amount: BigNumberish,
       i: BigNumberish,
       _min_received: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
-    "remove_liquidity_one_coin(uint256,int128,uint256,address)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  ramp_A: TypedContractMethod<
+    [_future_A: BigNumberish, _future_time: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    ramp_A(
-      _future_A: BigNumberish,
-      _future_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  stop_ramp_A: TypedContractMethod<[], [void], "nonpayable">;
 
-    stop_ramp_A(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  set_ma_exp_time: TypedContractMethod<
+    [_ma_exp_time: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    set_ma_exp_time(
-      _ma_exp_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  admin_balances: TypedContractMethod<[i: BigNumberish], [bigint], "view">;
 
-    admin_balances(
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  commit_new_fee: TypedContractMethod<
+    [_new_fee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
-    commit_new_fee(
-      _new_fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  apply_new_fee: TypedContractMethod<[], [void], "nonpayable">;
 
-    apply_new_fee(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  withdraw_admin_fees: TypedContractMethod<[], [void], "nonpayable">;
 
-    withdraw_admin_fees(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+  version: TypedContractMethod<[], [string], "view">;
 
-    version(overrides?: CallOverrides): Promise<[string]>;
+  coins: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-    coins(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
+  balances: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
-    balances(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  fee: TypedContractMethod<[], [bigint], "view">;
 
-    fee(overrides?: CallOverrides): Promise<[BigNumber]>;
+  future_fee: TypedContractMethod<[], [bigint], "view">;
 
-    future_fee(overrides?: CallOverrides): Promise<[BigNumber]>;
+  admin_action_deadline: TypedContractMethod<[], [bigint], "view">;
 
-    admin_action_deadline(overrides?: CallOverrides): Promise<[BigNumber]>;
+  initial_A: TypedContractMethod<[], [bigint], "view">;
 
-    initial_A(overrides?: CallOverrides): Promise<[BigNumber]>;
+  future_A: TypedContractMethod<[], [bigint], "view">;
 
-    future_A(overrides?: CallOverrides): Promise<[BigNumber]>;
+  initial_A_time: TypedContractMethod<[], [bigint], "view">;
 
-    initial_A_time(overrides?: CallOverrides): Promise<[BigNumber]>;
+  future_A_time: TypedContractMethod<[], [bigint], "view">;
 
-    future_A_time(overrides?: CallOverrides): Promise<[BigNumber]>;
+  name: TypedContractMethod<[], [string], "view">;
 
-    name(overrides?: CallOverrides): Promise<[string]>;
+  symbol: TypedContractMethod<[], [string], "view">;
 
-    symbol(overrides?: CallOverrides): Promise<[string]>;
+  balanceOf: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  allowance: TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
 
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+  totalSupply: TypedContractMethod<[], [bigint], "view">;
 
-    totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
+  DOMAIN_SEPARATOR: TypedContractMethod<[], [string], "view">;
 
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
+  nonces: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
-    nonces(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+  ma_exp_time: TypedContractMethod<[], [bigint], "view">;
 
-    ma_exp_time(overrides?: CallOverrides): Promise<[BigNumber]>;
+  ma_last_time: TypedContractMethod<[], [bigint], "view">;
 
-    ma_last_time(overrides?: CallOverrides): Promise<[BigNumber]>;
-  };
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  initialize(
-    _name: string,
-    _symbol: string,
-    _coins: [string, string, string, string],
-    _rate_multipliers: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-    _A: BigNumberish,
-    _fee: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
-
-  transfer(
-    _to: string,
-    _value: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferFrom(
-    _from: string,
-    _to: string,
-    _value: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  approve(
-    _spender: string,
-    _value: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  permit(
-    _owner: string,
-    _spender: string,
-    _value: BigNumberish,
-    _deadline: BigNumberish,
-    _v: BigNumberish,
-    _r: BytesLike,
-    _s: BytesLike,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  last_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-  ema_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-  get_balances(overrides?: CallOverrides): Promise<[BigNumber, BigNumber]>;
-
-  admin_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  A(overrides?: CallOverrides): Promise<BigNumber>;
-
-  A_precise(overrides?: CallOverrides): Promise<BigNumber>;
-
-  get_p(overrides?: CallOverrides): Promise<BigNumber>;
-
-  price_oracle(overrides?: CallOverrides): Promise<BigNumber>;
-
-  get_virtual_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-  calc_token_amount(
-    _amounts: [BigNumberish, BigNumberish],
-    _is_deposit: boolean,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "add_liquidity(uint256[2],uint256)"(
-    _amounts: [BigNumberish, BigNumberish],
-    _min_mint_amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "add_liquidity(uint256[2],uint256,address)"(
-    _amounts: [BigNumberish, BigNumberish],
-    _min_mint_amount: BigNumberish,
-    _receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  get_dy(
-    i: BigNumberish,
-    j: BigNumberish,
-    dx: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "exchange(int128,int128,uint256,uint256)"(
-    i: BigNumberish,
-    j: BigNumberish,
-    _dx: BigNumberish,
-    _min_dy: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "exchange(int128,int128,uint256,uint256,address)"(
-    i: BigNumberish,
-    j: BigNumberish,
-    _dx: BigNumberish,
-    _min_dy: BigNumberish,
-    _receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "remove_liquidity(uint256,uint256[2])"(
-    _burn_amount: BigNumberish,
-    _min_amounts: [BigNumberish, BigNumberish],
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "remove_liquidity(uint256,uint256[2],address)"(
-    _burn_amount: BigNumberish,
-    _min_amounts: [BigNumberish, BigNumberish],
-    _receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "remove_liquidity_imbalance(uint256[2],uint256)"(
-    _amounts: [BigNumberish, BigNumberish],
-    _max_burn_amount: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "remove_liquidity_imbalance(uint256[2],uint256,address)"(
-    _amounts: [BigNumberish, BigNumberish],
-    _max_burn_amount: BigNumberish,
-    _receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  calc_withdraw_one_coin(
-    _burn_amount: BigNumberish,
-    i: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "remove_liquidity_one_coin(uint256,int128,uint256)"(
-    _burn_amount: BigNumberish,
-    i: BigNumberish,
-    _min_received: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  "remove_liquidity_one_coin(uint256,int128,uint256,address)"(
-    _burn_amount: BigNumberish,
-    i: BigNumberish,
-    _min_received: BigNumberish,
-    _receiver: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  ramp_A(
-    _future_A: BigNumberish,
-    _future_time: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  stop_ramp_A(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  set_ma_exp_time(
-    _ma_exp_time: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  admin_balances(
-    i: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  commit_new_fee(
-    _new_fee: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  apply_new_fee(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  withdraw_admin_fees(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  version(overrides?: CallOverrides): Promise<string>;
-
-  coins(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  balances(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-  fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  future_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  admin_action_deadline(overrides?: CallOverrides): Promise<BigNumber>;
-
-  initial_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-  future_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-  initial_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-  future_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-  name(overrides?: CallOverrides): Promise<string>;
-
-  symbol(overrides?: CallOverrides): Promise<string>;
-
-  balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  allowance(
-    arg0: string,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
-
-  nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  ma_exp_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-  ma_last_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-  callStatic: {
-    initialize(
+  getFunction(
+    nameOrSignature: "initialize"
+  ): TypedContractMethod<
+    [
       _name: string,
       _symbol: string,
-      _coins: [string, string, string, string],
+      _coins: [AddressLike, AddressLike, AddressLike, AddressLike],
       _rate_multipliers: [
         BigNumberish,
         BigNumberish,
@@ -1143,810 +973,479 @@ export interface CvxCrvFactoryPool extends BaseContract {
         BigNumberish
       ],
       _A: BigNumberish,
-      _fee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
-
-    transfer(
-      _to: string,
-      _value: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    transferFrom(
-      _from: string,
-      _to: string,
-      _value: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    approve(
-      _spender: string,
-      _value: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    permit(
-      _owner: string,
-      _spender: string,
+      _fee: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "decimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFrom"
+  ): TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "approve"
+  ): TypedContractMethod<
+    [_spender: AddressLike, _value: BigNumberish],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "permit"
+  ): TypedContractMethod<
+    [
+      _owner: AddressLike,
+      _spender: AddressLike,
       _value: BigNumberish,
       _deadline: BigNumberish,
       _v: BigNumberish,
       _r: BytesLike,
-      _s: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    last_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    ema_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_balances(overrides?: CallOverrides): Promise<[BigNumber, BigNumber]>;
-
-    admin_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    A_precise(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_p(overrides?: CallOverrides): Promise<BigNumber>;
-
-    price_oracle(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_virtual_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    calc_token_amount(
-      _amounts: [BigNumberish, BigNumberish],
-      _is_deposit: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "add_liquidity(uint256[2],uint256)"(
+      _s: BytesLike
+    ],
+    [boolean],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "last_price"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ema_price"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "get_balances"
+  ): TypedContractMethod<[], [[bigint, bigint]], "view">;
+  getFunction(
+    nameOrSignature: "admin_fee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(nameOrSignature: "A"): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "A_precise"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "get_p"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "price_oracle"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "get_virtual_price"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "calc_token_amount"
+  ): TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _is_deposit: boolean],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "add_liquidity(uint256[2],uint256)"
+  ): TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _min_mint_amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "add_liquidity(uint256[2],uint256,address)"
+  ): TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _min_mint_amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "add_liquidity(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      _receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    get_dy(
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "get_dy"
+  ): TypedContractMethod<
+    [i: BigNumberish, j: BigNumberish, dx: BigNumberish],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "exchange(int128,int128,uint256,uint256)"
+  ): TypedContractMethod<
+    [
       i: BigNumberish,
       j: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "exchange(int128,int128,uint256,uint256)"(
+      _dx: BigNumberish,
+      _min_dy: BigNumberish
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "exchange(int128,int128,uint256,uint256,address)"
+  ): TypedContractMethod<
+    [
       i: BigNumberish,
       j: BigNumberish,
       _dx: BigNumberish,
       _min_dy: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "exchange(int128,int128,uint256,uint256,address)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      _receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "remove_liquidity(uint256,uint256[2])"(
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity(uint256,uint256[2])"
+  ): TypedContractMethod<
+    [_burn_amount: BigNumberish, _min_amounts: [BigNumberish, BigNumberish]],
+    [[bigint, bigint]],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity(uint256,uint256[2],address)"
+  ): TypedContractMethod<
+    [
       _burn_amount: BigNumberish,
       _min_amounts: [BigNumberish, BigNumberish],
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
-
-    "remove_liquidity(uint256,uint256[2],address)"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      _receiver: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256)"(
+      _receiver: AddressLike
+    ],
+    [[bigint, bigint]],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity_imbalance(uint256[2],uint256)"
+  ): TypedContractMethod<
+    [_amounts: [BigNumberish, BigNumberish], _max_burn_amount: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity_imbalance(uint256[2],uint256,address)"
+  ): TypedContractMethod<
+    [
       _amounts: [BigNumberish, BigNumberish],
       _max_burn_amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      _receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    calc_withdraw_one_coin(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_one_coin(uint256,int128,uint256)"(
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "calc_withdraw_one_coin"
+  ): TypedContractMethod<
+    [_burn_amount: BigNumberish, i: BigNumberish],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity_one_coin(uint256,int128,uint256)"
+  ): TypedContractMethod<
+    [_burn_amount: BigNumberish, i: BigNumberish, _min_received: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "remove_liquidity_one_coin(uint256,int128,uint256,address)"
+  ): TypedContractMethod<
+    [
       _burn_amount: BigNumberish,
       i: BigNumberish,
       _min_received: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+      _receiver: AddressLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "ramp_A"
+  ): TypedContractMethod<
+    [_future_A: BigNumberish, _future_time: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "stop_ramp_A"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "set_ma_exp_time"
+  ): TypedContractMethod<[_ma_exp_time: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "admin_balances"
+  ): TypedContractMethod<[i: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "commit_new_fee"
+  ): TypedContractMethod<[_new_fee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "apply_new_fee"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdraw_admin_fees"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "version"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "coins"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "balances"
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "fee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "future_fee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "admin_action_deadline"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "initial_A"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "future_A"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "initial_A_time"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "future_A_time"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "symbol"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "balanceOf"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "allowance"
+  ): TypedContractMethod<
+    [arg0: AddressLike, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "totalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "DOMAIN_SEPARATOR"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "nonces"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ma_exp_time"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ma_last_time"
+  ): TypedContractMethod<[], [bigint], "view">;
 
-    "remove_liquidity_one_coin(uint256,int128,uint256,address)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      _receiver: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    ramp_A(
-      _future_A: BigNumberish,
-      _future_time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    stop_ramp_A(overrides?: CallOverrides): Promise<void>;
-
-    set_ma_exp_time(
-      _ma_exp_time: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    admin_balances(
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    commit_new_fee(
-      _new_fee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    apply_new_fee(overrides?: CallOverrides): Promise<void>;
-
-    withdraw_admin_fees(overrides?: CallOverrides): Promise<void>;
-
-    version(overrides?: CallOverrides): Promise<string>;
-
-    coins(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-    balances(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    admin_action_deadline(overrides?: CallOverrides): Promise<BigNumber>;
-
-    initial_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    initial_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<string>;
-
-    symbol(overrides?: CallOverrides): Promise<string>;
-
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
-
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    ma_exp_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    ma_last_time(overrides?: CallOverrides): Promise<BigNumber>;
-  };
+  getEvent(
+    key: "Transfer"
+  ): TypedContractEvent<
+    TransferEvent.InputTuple,
+    TransferEvent.OutputTuple,
+    TransferEvent.OutputObject
+  >;
+  getEvent(
+    key: "Approval"
+  ): TypedContractEvent<
+    ApprovalEvent.InputTuple,
+    ApprovalEvent.OutputTuple,
+    ApprovalEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenExchange"
+  ): TypedContractEvent<
+    TokenExchangeEvent.InputTuple,
+    TokenExchangeEvent.OutputTuple,
+    TokenExchangeEvent.OutputObject
+  >;
+  getEvent(
+    key: "AddLiquidity"
+  ): TypedContractEvent<
+    AddLiquidityEvent.InputTuple,
+    AddLiquidityEvent.OutputTuple,
+    AddLiquidityEvent.OutputObject
+  >;
+  getEvent(
+    key: "RemoveLiquidity"
+  ): TypedContractEvent<
+    RemoveLiquidityEvent.InputTuple,
+    RemoveLiquidityEvent.OutputTuple,
+    RemoveLiquidityEvent.OutputObject
+  >;
+  getEvent(
+    key: "RemoveLiquidityOne"
+  ): TypedContractEvent<
+    RemoveLiquidityOneEvent.InputTuple,
+    RemoveLiquidityOneEvent.OutputTuple,
+    RemoveLiquidityOneEvent.OutputObject
+  >;
+  getEvent(
+    key: "RemoveLiquidityImbalance"
+  ): TypedContractEvent<
+    RemoveLiquidityImbalanceEvent.InputTuple,
+    RemoveLiquidityImbalanceEvent.OutputTuple,
+    RemoveLiquidityImbalanceEvent.OutputObject
+  >;
+  getEvent(
+    key: "RampA"
+  ): TypedContractEvent<
+    RampAEvent.InputTuple,
+    RampAEvent.OutputTuple,
+    RampAEvent.OutputObject
+  >;
+  getEvent(
+    key: "StopRampA"
+  ): TypedContractEvent<
+    StopRampAEvent.InputTuple,
+    StopRampAEvent.OutputTuple,
+    StopRampAEvent.OutputObject
+  >;
+  getEvent(
+    key: "CommitNewFee"
+  ): TypedContractEvent<
+    CommitNewFeeEvent.InputTuple,
+    CommitNewFeeEvent.OutputTuple,
+    CommitNewFeeEvent.OutputObject
+  >;
+  getEvent(
+    key: "ApplyNewFee"
+  ): TypedContractEvent<
+    ApplyNewFeeEvent.InputTuple,
+    ApplyNewFeeEvent.OutputTuple,
+    ApplyNewFeeEvent.OutputObject
+  >;
 
   filters: {
-    "Transfer(address,address,uint256)"(
-      sender?: string | null,
-      receiver?: string | null,
-      value?: null
-    ): TransferEventFilter;
-    Transfer(
-      sender?: string | null,
-      receiver?: string | null,
-      value?: null
-    ): TransferEventFilter;
-
-    "Approval(address,address,uint256)"(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-    Approval(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): ApprovalEventFilter;
-
-    "TokenExchange(address,int128,uint256,int128,uint256)"(
-      buyer?: string | null,
-      sold_id?: null,
-      tokens_sold?: null,
-      bought_id?: null,
-      tokens_bought?: null
-    ): TokenExchangeEventFilter;
-    TokenExchange(
-      buyer?: string | null,
-      sold_id?: null,
-      tokens_sold?: null,
-      bought_id?: null,
-      tokens_bought?: null
-    ): TokenExchangeEventFilter;
-
-    "AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)"(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      invariant?: null,
-      token_supply?: null
-    ): AddLiquidityEventFilter;
-    AddLiquidity(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      invariant?: null,
-      token_supply?: null
-    ): AddLiquidityEventFilter;
-
-    "RemoveLiquidity(address,uint256[2],uint256[2],uint256)"(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      token_supply?: null
-    ): RemoveLiquidityEventFilter;
-    RemoveLiquidity(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      token_supply?: null
-    ): RemoveLiquidityEventFilter;
-
-    "RemoveLiquidityOne(address,uint256,uint256,uint256)"(
-      provider?: string | null,
-      token_amount?: null,
-      coin_amount?: null,
-      token_supply?: null
-    ): RemoveLiquidityOneEventFilter;
-    RemoveLiquidityOne(
-      provider?: string | null,
-      token_amount?: null,
-      coin_amount?: null,
-      token_supply?: null
-    ): RemoveLiquidityOneEventFilter;
-
-    "RemoveLiquidityImbalance(address,uint256[2],uint256[2],uint256,uint256)"(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      invariant?: null,
-      token_supply?: null
-    ): RemoveLiquidityImbalanceEventFilter;
-    RemoveLiquidityImbalance(
-      provider?: string | null,
-      token_amounts?: null,
-      fees?: null,
-      invariant?: null,
-      token_supply?: null
-    ): RemoveLiquidityImbalanceEventFilter;
-
-    "RampA(uint256,uint256,uint256,uint256)"(
-      old_A?: null,
-      new_A?: null,
-      initial_time?: null,
-      future_time?: null
-    ): RampAEventFilter;
-    RampA(
-      old_A?: null,
-      new_A?: null,
-      initial_time?: null,
-      future_time?: null
-    ): RampAEventFilter;
-
-    "StopRampA(uint256,uint256)"(A?: null, t?: null): StopRampAEventFilter;
-    StopRampA(A?: null, t?: null): StopRampAEventFilter;
-
-    "CommitNewFee(uint256)"(new_fee?: null): CommitNewFeeEventFilter;
-    CommitNewFee(new_fee?: null): CommitNewFeeEventFilter;
-
-    "ApplyNewFee(uint256)"(fee?: null): ApplyNewFeeEventFilter;
-    ApplyNewFee(fee?: null): ApplyNewFeeEventFilter;
-  };
-
-  estimateGas: {
-    initialize(
-      _name: string,
-      _symbol: string,
-      _coins: [string, string, string, string],
-      _rate_multipliers: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ],
-      _A: BigNumberish,
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferFrom(
-      _from: string,
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    approve(
-      _spender: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    permit(
-      _owner: string,
-      _spender: string,
-      _value: BigNumberish,
-      _deadline: BigNumberish,
-      _v: BigNumberish,
-      _r: BytesLike,
-      _s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    last_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    ema_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_balances(overrides?: CallOverrides): Promise<BigNumber>;
-
-    admin_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    A_precise(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_p(overrides?: CallOverrides): Promise<BigNumber>;
-
-    price_oracle(overrides?: CallOverrides): Promise<BigNumber>;
-
-    get_virtual_price(overrides?: CallOverrides): Promise<BigNumber>;
-
-    calc_token_amount(
-      _amounts: [BigNumberish, BigNumberish],
-      _is_deposit: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "add_liquidity(uint256[2],uint256)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "add_liquidity(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    get_dy(
-      i: BigNumberish,
-      j: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "exchange(int128,int128,uint256,uint256)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "exchange(int128,int128,uint256,uint256,address)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "remove_liquidity(uint256,uint256[2])"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "remove_liquidity(uint256,uint256[2],address)"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    calc_withdraw_one_coin(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_one_coin(uint256,int128,uint256)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    "remove_liquidity_one_coin(uint256,int128,uint256,address)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    ramp_A(
-      _future_A: BigNumberish,
-      _future_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    stop_ramp_A(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    set_ma_exp_time(
-      _ma_exp_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    admin_balances(
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    commit_new_fee(
-      _new_fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    apply_new_fee(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    withdraw_admin_fees(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    version(overrides?: CallOverrides): Promise<BigNumber>;
-
-    coins(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    balances(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    admin_action_deadline(overrides?: CallOverrides): Promise<BigNumber>;
-
-    initial_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_A(overrides?: CallOverrides): Promise<BigNumber>;
-
-    initial_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    future_A_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
-
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
-
-    nonces(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    ma_exp_time(overrides?: CallOverrides): Promise<BigNumber>;
-
-    ma_last_time(overrides?: CallOverrides): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    initialize(
-      _name: string,
-      _symbol: string,
-      _coins: [string, string, string, string],
-      _rate_multipliers: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ],
-      _A: BigNumberish,
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferFrom(
-      _from: string,
-      _to: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    approve(
-      _spender: string,
-      _value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    permit(
-      _owner: string,
-      _spender: string,
-      _value: BigNumberish,
-      _deadline: BigNumberish,
-      _v: BigNumberish,
-      _r: BytesLike,
-      _s: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    last_price(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    ema_price(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    get_balances(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    admin_fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    A(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    A_precise(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    get_p(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    price_oracle(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    get_virtual_price(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    calc_token_amount(
-      _amounts: [BigNumberish, BigNumberish],
-      _is_deposit: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "add_liquidity(uint256[2],uint256)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "add_liquidity(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _min_mint_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    get_dy(
-      i: BigNumberish,
-      j: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "exchange(int128,int128,uint256,uint256)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "exchange(int128,int128,uint256,uint256,address)"(
-      i: BigNumberish,
-      j: BigNumberish,
-      _dx: BigNumberish,
-      _min_dy: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity(uint256,uint256[2])"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity(uint256,uint256[2],address)"(
-      _burn_amount: BigNumberish,
-      _min_amounts: [BigNumberish, BigNumberish],
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity_imbalance(uint256[2],uint256,address)"(
-      _amounts: [BigNumberish, BigNumberish],
-      _max_burn_amount: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    calc_withdraw_one_coin(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity_one_coin(uint256,int128,uint256)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    "remove_liquidity_one_coin(uint256,int128,uint256,address)"(
-      _burn_amount: BigNumberish,
-      i: BigNumberish,
-      _min_received: BigNumberish,
-      _receiver: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    ramp_A(
-      _future_A: BigNumberish,
-      _future_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    stop_ramp_A(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    set_ma_exp_time(
-      _ma_exp_time: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    admin_balances(
-      i: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    commit_new_fee(
-      _new_fee: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    apply_new_fee(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    withdraw_admin_fees(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    version(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    coins(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    balances(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    future_fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    admin_action_deadline(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    initial_A(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    future_A(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    initial_A_time(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    future_A_time(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    balanceOf(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    allowance(
-      arg0: string,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    nonces(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    ma_exp_time(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    ma_last_time(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "Transfer(address,address,uint256)": TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+    Transfer: TypedContractEvent<
+      TransferEvent.InputTuple,
+      TransferEvent.OutputTuple,
+      TransferEvent.OutputObject
+    >;
+
+    "Approval(address,address,uint256)": TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+    Approval: TypedContractEvent<
+      ApprovalEvent.InputTuple,
+      ApprovalEvent.OutputTuple,
+      ApprovalEvent.OutputObject
+    >;
+
+    "TokenExchange(address,int128,uint256,int128,uint256)": TypedContractEvent<
+      TokenExchangeEvent.InputTuple,
+      TokenExchangeEvent.OutputTuple,
+      TokenExchangeEvent.OutputObject
+    >;
+    TokenExchange: TypedContractEvent<
+      TokenExchangeEvent.InputTuple,
+      TokenExchangeEvent.OutputTuple,
+      TokenExchangeEvent.OutputObject
+    >;
+
+    "AddLiquidity(address,uint256[2],uint256[2],uint256,uint256)": TypedContractEvent<
+      AddLiquidityEvent.InputTuple,
+      AddLiquidityEvent.OutputTuple,
+      AddLiquidityEvent.OutputObject
+    >;
+    AddLiquidity: TypedContractEvent<
+      AddLiquidityEvent.InputTuple,
+      AddLiquidityEvent.OutputTuple,
+      AddLiquidityEvent.OutputObject
+    >;
+
+    "RemoveLiquidity(address,uint256[2],uint256[2],uint256)": TypedContractEvent<
+      RemoveLiquidityEvent.InputTuple,
+      RemoveLiquidityEvent.OutputTuple,
+      RemoveLiquidityEvent.OutputObject
+    >;
+    RemoveLiquidity: TypedContractEvent<
+      RemoveLiquidityEvent.InputTuple,
+      RemoveLiquidityEvent.OutputTuple,
+      RemoveLiquidityEvent.OutputObject
+    >;
+
+    "RemoveLiquidityOne(address,uint256,uint256,uint256)": TypedContractEvent<
+      RemoveLiquidityOneEvent.InputTuple,
+      RemoveLiquidityOneEvent.OutputTuple,
+      RemoveLiquidityOneEvent.OutputObject
+    >;
+    RemoveLiquidityOne: TypedContractEvent<
+      RemoveLiquidityOneEvent.InputTuple,
+      RemoveLiquidityOneEvent.OutputTuple,
+      RemoveLiquidityOneEvent.OutputObject
+    >;
+
+    "RemoveLiquidityImbalance(address,uint256[2],uint256[2],uint256,uint256)": TypedContractEvent<
+      RemoveLiquidityImbalanceEvent.InputTuple,
+      RemoveLiquidityImbalanceEvent.OutputTuple,
+      RemoveLiquidityImbalanceEvent.OutputObject
+    >;
+    RemoveLiquidityImbalance: TypedContractEvent<
+      RemoveLiquidityImbalanceEvent.InputTuple,
+      RemoveLiquidityImbalanceEvent.OutputTuple,
+      RemoveLiquidityImbalanceEvent.OutputObject
+    >;
+
+    "RampA(uint256,uint256,uint256,uint256)": TypedContractEvent<
+      RampAEvent.InputTuple,
+      RampAEvent.OutputTuple,
+      RampAEvent.OutputObject
+    >;
+    RampA: TypedContractEvent<
+      RampAEvent.InputTuple,
+      RampAEvent.OutputTuple,
+      RampAEvent.OutputObject
+    >;
+
+    "StopRampA(uint256,uint256)": TypedContractEvent<
+      StopRampAEvent.InputTuple,
+      StopRampAEvent.OutputTuple,
+      StopRampAEvent.OutputObject
+    >;
+    StopRampA: TypedContractEvent<
+      StopRampAEvent.InputTuple,
+      StopRampAEvent.OutputTuple,
+      StopRampAEvent.OutputObject
+    >;
+
+    "CommitNewFee(uint256)": TypedContractEvent<
+      CommitNewFeeEvent.InputTuple,
+      CommitNewFeeEvent.OutputTuple,
+      CommitNewFeeEvent.OutputObject
+    >;
+    CommitNewFee: TypedContractEvent<
+      CommitNewFeeEvent.InputTuple,
+      CommitNewFeeEvent.OutputTuple,
+      CommitNewFeeEvent.OutputObject
+    >;
+
+    "ApplyNewFee(uint256)": TypedContractEvent<
+      ApplyNewFeeEvent.InputTuple,
+      ApplyNewFeeEvent.OutputTuple,
+      ApplyNewFeeEvent.OutputObject
+    >;
+    ApplyNewFee: TypedContractEvent<
+      ApplyNewFeeEvent.InputTuple,
+      ApplyNewFeeEvent.OutputTuple,
+      ApplyNewFeeEvent.OutputObject
+    >;
   };
 }

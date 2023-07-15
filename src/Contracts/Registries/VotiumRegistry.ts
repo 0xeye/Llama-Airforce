@@ -3,55 +3,29 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
+  TypedContractMethod,
 } from "../common";
 
-export interface VotiumRegistryInterface extends utils.Interface {
-  functions: {
-    "batchAddressCheck(address[])": FunctionFragment;
-    "currentEpoch()": FunctionFragment;
-    "eDuration()": FunctionFragment;
-    "execute(address,uint256,bytes)": FunctionFragment;
-    "forceRegistry(address,address)": FunctionFragment;
-    "forceToExpire(address)": FunctionFragment;
-    "forwardHistory(uint256)": FunctionFragment;
-    "forwardLength()": FunctionFragment;
-    "forwardPage(uint256,uint256)": FunctionFragment;
-    "inForwardHistory(address)": FunctionFragment;
-    "inOptOutHistory(address)": FunctionFragment;
-    "nextEpoch()": FunctionFragment;
-    "optOutHistory(uint256)": FunctionFragment;
-    "optOutLength()": FunctionFragment;
-    "optOutPage(uint256,uint256)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "registry(address)": FunctionFragment;
-    "setRegistry(address)": FunctionFragment;
-    "setToExpire()": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-  };
-
+export interface VotiumRegistryInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "batchAddressCheck"
       | "currentEpoch"
       | "eDuration"
@@ -74,9 +48,13 @@ export interface VotiumRegistryInterface extends utils.Interface {
       | "transferOwnership"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic: "OwnershipTransferred" | "expReg" | "setReg"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "batchAddressCheck",
-    values: [string[]]
+    values: [AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "currentEpoch",
@@ -85,15 +63,15 @@ export interface VotiumRegistryInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "eDuration", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "execute",
-    values: [string, BigNumberish, BytesLike]
+    values: [AddressLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "forceRegistry",
-    values: [string, string]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "forceToExpire",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "forwardHistory",
@@ -109,11 +87,11 @@ export interface VotiumRegistryInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "inForwardHistory",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "inOptOutHistory",
-    values: [string]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "nextEpoch", values?: undefined): string;
   encodeFunctionData(
@@ -129,15 +107,21 @@ export interface VotiumRegistryInterface extends utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(functionFragment: "registry", values: [string]): string;
-  encodeFunctionData(functionFragment: "setRegistry", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "registry",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setRegistry",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "setToExpire",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [string]
+    values: [AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -202,532 +186,318 @@ export interface VotiumRegistryInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-
-  events: {
-    "OwnershipTransferred(address,address)": EventFragment;
-    "expReg(address,uint256)": EventFragment;
-    "setReg(address,address,uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "expReg"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "setReg"): EventFragment;
 }
 
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface expRegEventObject {
-  _from: string;
-  _end: BigNumber;
+export namespace expRegEvent {
+  export type InputTuple = [_from: AddressLike, _end: BigNumberish];
+  export type OutputTuple = [_from: string, _end: bigint];
+  export interface OutputObject {
+    _from: string;
+    _end: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type expRegEvent = TypedEvent<[string, BigNumber], expRegEventObject>;
 
-export type expRegEventFilter = TypedEventFilter<expRegEvent>;
-
-export interface setRegEventObject {
-  _from: string;
-  _to: string;
-  _start: BigNumber;
+export namespace setRegEvent {
+  export type InputTuple = [
+    _from: AddressLike,
+    _to: AddressLike,
+    _start: BigNumberish
+  ];
+  export type OutputTuple = [_from: string, _to: string, _start: bigint];
+  export interface OutputObject {
+    _from: string;
+    _to: string;
+    _start: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type setRegEvent = TypedEvent<
-  [string, string, BigNumber],
-  setRegEventObject
->;
-
-export type setRegEventFilter = TypedEventFilter<setRegEvent>;
 
 export interface VotiumRegistry extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): VotiumRegistry;
+  waitForDeployment(): Promise<this>;
 
   interface: VotiumRegistryInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    batchAddressCheck(
-      accounts: string[],
-      overrides?: CallOverrides
-    ): Promise<[string[]]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    currentEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    eDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    execute(
-      _to: string,
-      _value: BigNumberish,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    forceRegistry(
-      _from: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    forceToExpire(
-      _from: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    forwardHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    forwardLength(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    forwardPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string[]]>;
-
-    inForwardHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    inOptOutHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    nextEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    optOutHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    optOutLength(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    optOutPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string[]]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    registry(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, string, BigNumber] & {
-        start: BigNumber;
-        to: string;
-        expiration: BigNumber;
-      }
-    >;
-
-    setRegistry(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setToExpire(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-  };
-
-  batchAddressCheck(
-    accounts: string[],
-    overrides?: CallOverrides
-  ): Promise<string[]>;
-
-  currentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  eDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-  execute(
-    _to: string,
-    _value: BigNumberish,
-    _data: BytesLike,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  forceRegistry(
-    _from: string,
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  forceToExpire(
-    _from: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  forwardHistory(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  forwardLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-  forwardPage(
-    size: BigNumberish,
-    page: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string[]>;
-
-  inForwardHistory(arg0: string, overrides?: CallOverrides): Promise<boolean>;
-
-  inOptOutHistory(arg0: string, overrides?: CallOverrides): Promise<boolean>;
-
-  nextEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  optOutHistory(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  optOutLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-  optOutPage(
-    size: BigNumberish,
-    page: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string[]>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  registry(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, string, BigNumber] & {
-      start: BigNumber;
-      to: string;
-      expiration: BigNumber;
-    }
+  batchAddressCheck: TypedContractMethod<
+    [accounts: AddressLike[]],
+    [string[]],
+    "view"
   >;
 
-  setRegistry(
-    _to: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  currentEpoch: TypedContractMethod<[], [bigint], "view">;
 
-  setToExpire(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  eDuration: TypedContractMethod<[], [bigint], "view">;
 
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  execute: TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish, _data: BytesLike],
+    [[boolean, string]],
+    "nonpayable"
+  >;
 
-  callStatic: {
-    batchAddressCheck(
-      accounts: string[],
-      overrides?: CallOverrides
-    ): Promise<string[]>;
+  forceRegistry: TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    currentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
+  forceToExpire: TypedContractMethod<
+    [_from: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
-    eDuration(overrides?: CallOverrides): Promise<BigNumber>;
+  forwardHistory: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-    execute(
-      _to: string,
-      _value: BigNumberish,
-      _data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean, string]>;
+  forwardLength: TypedContractMethod<[], [bigint], "view">;
 
-    forceRegistry(
-      _from: string,
-      _to: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+  forwardPage: TypedContractMethod<
+    [size: BigNumberish, page: BigNumberish],
+    [string[]],
+    "view"
+  >;
 
-    forceToExpire(_from: string, overrides?: CallOverrides): Promise<void>;
+  inForwardHistory: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
 
-    forwardHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
+  inOptOutHistory: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
 
-    forwardLength(overrides?: CallOverrides): Promise<BigNumber>;
+  nextEpoch: TypedContractMethod<[], [bigint], "view">;
 
-    forwardPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string[]>;
+  optOutHistory: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
-    inForwardHistory(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+  optOutLength: TypedContractMethod<[], [bigint], "view">;
 
-    inOptOutHistory(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+  optOutPage: TypedContractMethod<
+    [size: BigNumberish, page: BigNumberish],
+    [string[]],
+    "view"
+  >;
 
-    nextEpoch(overrides?: CallOverrides): Promise<BigNumber>;
+  owner: TypedContractMethod<[], [string], "view">;
 
-    optOutHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    optOutLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-    optOutPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string[]>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    registry(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, string, BigNumber] & {
-        start: BigNumber;
+  registry: TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, string, bigint] & {
+        start: bigint;
         to: string;
-        expiration: BigNumber;
+        expiration: bigint;
       }
-    >;
+    ],
+    "view"
+  >;
 
-    setRegistry(_to: string, overrides?: CallOverrides): Promise<void>;
+  setRegistry: TypedContractMethod<[_to: AddressLike], [void], "nonpayable">;
 
-    setToExpire(overrides?: CallOverrides): Promise<void>;
+  setToExpire: TypedContractMethod<[], [void], "nonpayable">;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "batchAddressCheck"
+  ): TypedContractMethod<[accounts: AddressLike[]], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "currentEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "eDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "execute"
+  ): TypedContractMethod<
+    [_to: AddressLike, _value: BigNumberish, _data: BytesLike],
+    [[boolean, string]],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "forceRegistry"
+  ): TypedContractMethod<
+    [_from: AddressLike, _to: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "forceToExpire"
+  ): TypedContractMethod<[_from: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "forwardHistory"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "forwardLength"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "forwardPage"
+  ): TypedContractMethod<
+    [size: BigNumberish, page: BigNumberish],
+    [string[]],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "inForwardHistory"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "inOptOutHistory"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "nextEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "optOutHistory"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "optOutLength"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "optOutPage"
+  ): TypedContractMethod<
+    [size: BigNumberish, page: BigNumberish],
+    [string[]],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "registry"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [
+      [bigint, string, bigint] & {
+        start: bigint;
+        to: string;
+        expiration: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "setRegistry"
+  ): TypedContractMethod<[_to: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setToExpire"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "expReg"
+  ): TypedContractEvent<
+    expRegEvent.InputTuple,
+    expRegEvent.OutputTuple,
+    expRegEvent.OutputObject
+  >;
+  getEvent(
+    key: "setReg"
+  ): TypedContractEvent<
+    setRegEvent.InputTuple,
+    setRegEvent.OutputTuple,
+    setRegEvent.OutputObject
+  >;
 
   filters: {
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
 
-    "expReg(address,uint256)"(
-      _from?: string | null,
-      _end?: BigNumberish | null
-    ): expRegEventFilter;
-    expReg(
-      _from?: string | null,
-      _end?: BigNumberish | null
-    ): expRegEventFilter;
+    "expReg(address,uint256)": TypedContractEvent<
+      expRegEvent.InputTuple,
+      expRegEvent.OutputTuple,
+      expRegEvent.OutputObject
+    >;
+    expReg: TypedContractEvent<
+      expRegEvent.InputTuple,
+      expRegEvent.OutputTuple,
+      expRegEvent.OutputObject
+    >;
 
-    "setReg(address,address,uint256)"(
-      _from?: string | null,
-      _to?: string | null,
-      _start?: BigNumberish | null
-    ): setRegEventFilter;
-    setReg(
-      _from?: string | null,
-      _to?: string | null,
-      _start?: BigNumberish | null
-    ): setRegEventFilter;
-  };
-
-  estimateGas: {
-    batchAddressCheck(
-      accounts: string[],
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    currentEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    eDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    execute(
-      _to: string,
-      _value: BigNumberish,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    forceRegistry(
-      _from: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    forceToExpire(
-      _from: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    forwardHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    forwardLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-    forwardPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    inForwardHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    inOptOutHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    nextEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    optOutHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    optOutLength(overrides?: CallOverrides): Promise<BigNumber>;
-
-    optOutPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    registry(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    setRegistry(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setToExpire(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    batchAddressCheck(
-      accounts: string[],
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    currentEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    eDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    execute(
-      _to: string,
-      _value: BigNumberish,
-      _data: BytesLike,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    forceRegistry(
-      _from: string,
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    forceToExpire(
-      _from: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    forwardHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    forwardLength(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    forwardPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    inForwardHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    inOptOutHistory(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    nextEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    optOutHistory(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    optOutLength(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    optOutPage(
-      size: BigNumberish,
-      page: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    registry(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    setRegistry(
-      _to: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setToExpire(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
+    "setReg(address,address,uint256)": TypedContractEvent<
+      setRegEvent.InputTuple,
+      setRegEvent.OutputTuple,
+      setRegEvent.OutputObject
+    >;
+    setReg: TypedContractEvent<
+      setRegEvent.InputTuple,
+      setRegEvent.OutputTuple,
+      setRegEvent.OutputObject
+    >;
   };
 }
