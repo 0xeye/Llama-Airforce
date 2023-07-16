@@ -1,4 +1,4 @@
-import { utils, BigNumber } from "ethers";
+import { formatUnits, parseUnits } from "ethers";
 
 /**
  * No shame, ripped from
@@ -127,10 +127,10 @@ export function round(
   }
 }
 
-export function bigNumToNumber(value: BigNumber, decimals: number): number {
-  return parseFloat(utils.formatUnits(value, decimals));
+export function bigNumToNumber(value: bigint, decimals: bigint): number {
+  return parseFloat(formatUnits(value, decimals));
 }
 
-export function numToBigNumber(value: number, decimals: number): BigNumber {
-  return utils.parseUnits(value.toFixed(decimals), decimals);
+export function numToBigNumber(value: number, decimals: bigint): bigint {
+  return parseUnits(value.toFixed(Number(decimals)), decimals);
 }

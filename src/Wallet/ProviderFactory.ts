@@ -1,9 +1,5 @@
-import {
-  ExternalProvider,
-  Web3Provider,
-  JsonRpcProvider,
-} from "@ethersproject/providers";
-import Onboard, { OnboardAPI, WalletState } from "@web3-onboard/core";
+import { BrowserProvider } from "ethers";
+import Onboard, { type OnboardAPI, type WalletState } from "@web3-onboard/core";
 import injectedModule from "@web3-onboard/injected-wallets";
 import walletConnectModule from "@web3-onboard/walletconnect";
 import coinbaseWalletModule from "@web3-onboard/coinbase";
@@ -73,9 +69,9 @@ export async function connectWallet(showModal = false) {
   walletConnected = wallet ? wallet : null;
 }
 
-export function getProvider(): JsonRpcProvider | undefined {
+export function getProvider(): BrowserProvider | undefined {
   return walletConnected
-    ? new Web3Provider(walletConnected.provider as ExternalProvider)
+    ? new BrowserProvider(walletConnected.provider)
     : undefined;
 }
 

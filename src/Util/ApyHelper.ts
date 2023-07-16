@@ -1,5 +1,4 @@
-import { BigNumber, Signer } from "ethers";
-import { type Provider } from "@ethersproject/providers";
+import { type ContractRunner } from "ethers";
 import { chain, zip } from "lodash";
 import {
   CurveV2FactoryPool__factory,
@@ -24,8 +23,8 @@ import {
   UCrvStrategyAddressV2,
 } from "@/Util/Addresses";
 import { fetchType } from "@/Services/ServiceBase";
-import DefiLlamaService from "@/Services/DefiLlamaService";
-import FlyerService from "@/Apps/LlamaAirforce/Pages/Convex/Flyer/Services/FlyerService";
+import type DefiLlamaService from "@/Services/DefiLlamaService";
+import type FlyerService from "@/Apps/LlamaAirforce/Pages/Convex/Flyer/Services/FlyerService";
 
 /**
  * Assumes weekly compounding. Apr is a [0, 100] percentage.
@@ -45,31 +44,31 @@ export function getCvxApy(flyerService: FlyerService): Promise<number> {
 }
 
 export async function getCvxCrvAprs(
-  provider: Provider | Signer,
+  runner: ContractRunner,
   llamaService: DefiLlamaService,
   address?: string // If empty, you'll get all APRs of all weights.
 ): Promise<number[]> {
-  const util = CvxCrvUtilities__factory.connect(CvxCrvUtilities, provider);
+  const util = CvxCrvUtilities__factory.connect(CvxCrvUtilities, runner);
 
   const mainRates = await (address
     ? util.accountRewardRates(address)
     : util.mainRewardRates()
-  ).then((x) => zip(x.tokens, x.rates) as [string, BigNumber][]);
+  ).then((x) => zip(x.tokens, x.rates) as [string, bigint][]);
 
   const extraRates = await (address
     ? util.accountExtraRewardRates(address)
     : util.extraRewardRates()
-  ).then((x) => zip(x.tokens, x.rates) as [string, BigNumber][]);
+  ).then((x) => zip(x.tokens, x.rates) as [string, bigint][]);
 
   const rates = chain(mainRates)
     .concat(extraRates)
     // Only take rate > 0
-    .filter((x) => x[1].gt(0))
+    .filter((x) => x[1] > 0n)
     // Sum the rates of addresses both in main and extra.
     .groupBy((x) => x[0])
     .map((x, address) => ({
       address,
-      rate: x.reduce((acc, r) => acc.add(r[1]), BigNumber.from(0)),
+      rate: x.reduce((acc, r) => acc + r[1], 0n),
     }))
     .value();
 
@@ -86,7 +85,7 @@ export async function getCvxCrvAprs(
         price: coins[coin].price,
       })),
       (x) => x.address,
-      (x) => numToBigNumber(x.price, 18)
+      (x) => numToBigNumber(x.price, 18n)
     )
   );
 
@@ -101,7 +100,7 @@ export async function getCvxCrvAprs(
       priceOfDeposit
     );
 
-    const aprNumber = bigNumToNumber(apr, 18);
+    const aprNumber = bigNumToNumber(apr, 18n);
     aprs.push(aprNumber);
   }
 
@@ -109,10 +108,10 @@ export async function getCvxCrvAprs(
 }
 
 export async function getCvxCrvApy(
-  provider: Provider | Signer,
+  runner: ContractRunner,
   llamaService: DefiLlamaService
 ): Promise<number> {
-  const aprs = await getCvxCrvAprs(provider, llamaService, UCrvStrategyAddress);
+  const aprs = await getCvxCrvAprs(runner, llamaService, UCrvStrategyAddress);
 
   // Sum all individual APRs together.
   const apr = aprs.reduce((acc, x) => acc + x, 0);
@@ -121,14 +120,10 @@ export async function getCvxCrvApy(
 }
 
 export async function getCvxCrvApyV2(
-  provider: Provider | Signer,
+  runner: ContractRunner,
   llamaService: DefiLlamaService
 ): Promise<number> {
-  const aprs = await getCvxCrvAprs(
-    provider,
-    llamaService,
-    UCrvStrategyAddressV2
-  );
+  const aprs = await getCvxCrvAprs(runner, llamaService, UCrvStrategyAddressV2);
 
   // Sum all individual APRs together.
   const apr = aprs.reduce((acc, x) => acc + x, 0);
@@ -198,32 +193,29 @@ export function getAuraBalApy(flyerService: FlyerService): Promise<number> {
 }
 
 export async function getCvxFxsApy(
-  provider: Provider | Signer,
+  runner: ContractRunner,
   llamaService: DefiLlamaService
 ): Promise<number> {
-  const rewardsContract = CvxFxsRewards__factory.connect(
-    CvxFxsStaking,
-    provider
-  );
+  const rewardsContract = CvxFxsRewards__factory.connect(CvxFxsStaking, runner);
 
   const getRewardRate = async (address: string): Promise<number> => {
     const rewardData = await rewardsContract.rewardData(address);
     const periodFinish = rewardData.periodFinish;
 
-    if (Date.now() / 1000 >= bigNumToNumber(periodFinish, 0)) {
+    if (Date.now() / 1000 >= bigNumToNumber(periodFinish, 0n)) {
       return 0;
     }
 
-    return bigNumToNumber(rewardData.rewardRate, 18);
+    return bigNumToNumber(rewardData.rewardRate, 18n);
   };
 
   const rateFxs = await getRewardRate(FxsAddress);
   const rateCvx = await getRewardRate(CvxAddress);
-  const supply = bigNumToNumber(await rewardsContract.totalSupply(), 18);
+  const supply = bigNumToNumber(await rewardsContract.totalSupply(), 18n);
 
   const curvePool = CurveV2FactoryPool__factory.connect(
     CvxFxsFactoryAddress,
-    provider
+    runner
   );
 
   const priceCvxFxs = await getCvxFxsPrice(llamaService, curvePool);

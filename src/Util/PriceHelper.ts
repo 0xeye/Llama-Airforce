@@ -1,16 +1,15 @@
-import { BigNumber } from "ethers";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { type ContractRunner } from "ethers";
 import {
-  ContractCallContext,
-  ContractCallResults,
+  type ContractCallContext,
+  type ContractCallResults,
   Multicall,
 } from "ethereum-multicall";
 import CurveV2FactoryPoolABI from "@/ABI/Curve/CurveV2FactoryPool.json";
 import ERC20ABI from "@/ABI/Standards/ERC20.json";
 import {
-  CurveV1FactoryPool,
-  CurveV2FactoryPool,
-  CvxCrvFactoryPool,
+  type CurveV1FactoryPool,
+  type CurveV2FactoryPool,
+  type CvxCrvFactoryPool,
 } from "@/Contracts";
 import {
   CrvAddress,
@@ -20,18 +19,18 @@ import {
   FxsAddress,
 } from "@/Util/Addresses";
 import { bigNumToNumber, numToBigNumber } from "@/Util/NumberHelper";
-import FlyerService from "@/Apps/LlamaAirforce/Pages/Convex/Flyer/Services/FlyerService";
-import DefiLlamaService from "@/Services/DefiLlamaService";
+import type FlyerService from "@/Apps/LlamaAirforce/Pages/Convex/Flyer/Services/FlyerService";
+import type DefiLlamaService from "@/Services/DefiLlamaService";
 
 export async function getDiscount(
   pool: CurveV1FactoryPool | CurveV2FactoryPool
 ): Promise<number> {
-  const dec = BigNumber.from(10).pow(18);
-  const tkn_in = BigNumber.from(10).pow(22);
+  const dec = 10n ** 18n;
+  const tkn_in = 10n ** 22n;
   const tkn_out = await pool.get_dy(0, 1, tkn_in);
-  const discount = tkn_out.sub(tkn_in).mul(dec).div(tkn_out);
+  const discount = ((tkn_out - tkn_in) * dec) / tkn_out;
 
-  return 1 - bigNumToNumber(discount, 18);
+  return 1 - bigNumToNumber(discount, 18n);
 }
 
 export function getDefiLlamaPrice(
@@ -54,7 +53,7 @@ export async function getPxCvxPrice(
 ): Promise<number> {
   const cvxPrice = await getDefiLlamaPrice(llamaService, CvxAddress);
   const price_oracle = await pxCvxFactoryPool.price_oracle();
-  const decimals = 18;
+  const decimals = 18n;
 
   return cvxPrice * bigNumToNumber(price_oracle, decimals);
 }
@@ -67,7 +66,7 @@ export async function getCvxCrvPrice(
 
   return cvxCrvFactoryPool
     .price_oracle()
-    .then((price) => bigNumToNumber(price, 18) * crvPrice);
+    .then((price) => bigNumToNumber(price, 18n) * crvPrice);
 }
 
 export async function getCvxCrvPriceV2(
@@ -90,18 +89,18 @@ export async function getCvxFxsPrice(
 
   return cvxFxsFactoryPool
     .price_oracle()
-    .then((price) => bigNumToNumber(price, 18) * fxsPrice);
+    .then((price) => bigNumToNumber(price, 18n) * fxsPrice);
 }
 
 export async function getCurveV2LpPrice(
   llamaService: DefiLlamaService,
-  provider: JsonRpcProvider,
+  runner: ContractRunner,
   tokenAddress: string,
   factoryAddress: string,
   factoryTokenAddress: string
 ): Promise<number> {
   const multicall = new Multicall({
-    ethersProvider: provider,
+    ethersProvider: runner.provider,
     tryAggregate: true,
   });
 
@@ -148,31 +147,31 @@ export async function getCurveV2LpPrice(
   const valuesFactory = results.results.factory.callsReturnContext;
   const valuesFactoryERC20 = results.results.factoryerc20.callsReturnContext;
 
-  const tvl_tkn = BigNumber.from(valuesFactory[0].returnValues[0]);
-  const tvl_atkn = BigNumber.from(valuesFactory[1].returnValues[0]);
-  const oracle_price = BigNumber.from(valuesFactory[2].returnValues[0]);
-  const supply = BigNumber.from(valuesFactoryERC20[0].returnValues[0]);
-  const decimals = 18;
+  const tvl_tkn = BigInt(valuesFactory[0].returnValues[0]);
+  const tvl_atkn = BigInt(valuesFactory[1].returnValues[0]);
+  const oracle_price = BigInt(valuesFactory[2].returnValues[0]);
+  const supply = BigInt(valuesFactoryERC20[0].returnValues[0]);
+  const decimals = 18n;
   const fxsPrice = await llamaService
     .getPrice(tokenAddress)
     .then((x) => numToBigNumber(x.price, decimals))
-    .catch(() => 0);
-  const dec = BigNumber.from(10).pow(decimals);
+    .catch(() => 0n);
+  const dec = 10n ** decimals;
 
-  const tvl = tvl_tkn.add(tvl_atkn.mul(oracle_price).div(dec));
-  const tvl_dollars = tvl.mul(fxsPrice).div(dec);
-  const lp_price = tvl_dollars.mul(dec).div(supply);
+  const tvl = ((tvl_tkn + tvl_atkn) * oracle_price) / dec;
+  const tvl_dollars = (tvl * fxsPrice) / dec;
+  const lp_price = (tvl_dollars * dec) / supply;
 
   return bigNumToNumber(lp_price, decimals);
 }
 
 export async function getCvxFxsLpPrice(
   llamaService: DefiLlamaService,
-  provider: JsonRpcProvider
+  runner: ContractRunner
 ): Promise<number> {
   return getCurveV2LpPrice(
     llamaService,
-    provider,
+    runner,
     FxsAddress,
     CvxFxsFactoryAddress,
     CvxFxsFactoryERC20Address
